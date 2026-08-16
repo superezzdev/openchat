@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FFE347;
+  --color-xblack: #111111;
+  --color-xwhite: #FFFFFF;
+  --color-xbg: #F8F8F8;
+  --color-live: #E5484D;
+  --color-success: #55D98A;
+  --color-muted: #777777;
+  --color-border: #222222;
+  
+  --font-sans: "Inter", system-ui, sans-serif;
+  
+  --animate-fade-in-down: fade-in-down 0.4s ease-out;
+  --animate-fade-in-up: fade-in-up 0.4s ease-out;
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-xbg);
+    color: var(--color-xblack);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom utilities for thick borders as per the design */
+@layer utilities {
+  .border-thick {
+    border-width: 3px;
+    border-style: solid;
+    border-color: var(--color-border);
+  }
+  
+  .border-thick-b {
+    border-bottom-width: 3px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--color-border);
+  }
+}
