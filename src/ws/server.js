@@ -2,6 +2,11 @@ import { WebSocket, WebSocketServer } from "ws";
 import { wsArcjet } from "../arcjet.js";
 import crypto from "crypto";
 
+/**
+ * Attaches the WebSocket server to the HTTP server and handles signaling.
+ * @param {import('http').Server} server - The HTTP server instance
+ * @returns {WebSocketServer} The WebSocket server instance
+ */
 export function attachWebSocketServer(server) {
   const wss = new WebSocketServer({
     server,
@@ -20,10 +25,24 @@ export function attachWebSocketServer(server) {
     },
   });
 
+  /**
+   * The waiting room queues and active rooms.
+   * We use a Set for queues to easily add/remove unique connections without duplicates,
+   * and a Map for rooms to quickly look up a room by a user's socket connection.
+   */
   const waitingQueue = new Set();
   const spyQueue = new Set();
   const rooms = new Map();
 
+  /**
+   * Pairs two users together in a normal video/text chat room.
+   * @param {WebSocket} socket1 - The first user's socket
+   * @param {WebSocket} socket2 - The second user's socket
+   * @param {Array} commonInterests - Tags they both share
+   * 
+   * WHY we notify both: WebRTC needs one side to create an "offer" and the other to "answer".
+   * We assign the 'initiator' role to one of them, so they know who should start the WebRTC handshake.
+   */
   function pairUp(socket1, socket2, commonInterests) {
     const room = { sockets: [socket1, socket2], type: 'normal' };
     rooms.set(socket1, room);
@@ -35,6 +54,12 @@ export function attachWebSocketServer(server) {
     sendJson(socket2, { type: "matched", initiator: false, commonInterests });
   }
 
+  /**
+   * Pairs three users together for a spy mode room.
+   * @param {Object} spyItem - The spy user object
+   * @param {Object} stranger1 - The first stranger object
+   * @param {Object} stranger2 - The second stranger object
+   */
   function pairUpSpy(spyItem, stranger1, stranger2) {
     const room = { 
       sockets: [spyItem.socket, stranger1.socket, stranger2.socket], 
@@ -53,12 +78,20 @@ export function attachWebSocketServer(server) {
     sendJson(stranger2.socket, { type: "matched", initiator: false, isSpyStranger: true, question: spyItem.question, peerId: 2 });
   }
 
+  /**
+   * Sends a JSON payload to a WebSocket client.
+   * @param {WebSocket} socket - The target socket
+   * @param {Object} payload - The data to stringify and send
+   */
   function sendJson(socket, payload) {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(payload));
     }
   }
 
+  /**
+   * Broadcasts the current number of connected users to all clients.
+   */
   function broadcastUserCount() {
     const payload = JSON.stringify({ type: 'userCount', count: wss.clients.size });
     wss.clients.forEach((client) => {
@@ -68,6 +101,15 @@ export function attachWebSocketServer(server) {
     });
   }
 
+  /**
+   * Cleans up when a user disconnects.
+   * @param {WebSocket} socket - The socket that disconnected
+   * 
+   * WHY notify the peer: The other user needs to know their partner left so they can 
+   * reset their UI and find a new stranger, instead of staring at a frozen video.
+   * We also remove the disconnected socket from the waiting room so we don't try 
+   * to match someone with a dead connection.
+   */
   function handleDisconnect(socket) {
     console.log(`[${new Date().toISOString()}] WebSocket disconnected: ${socket.id}`);
     for (const w of waitingQueue) {
@@ -218,6 +260,14 @@ export function attachWebSocketServer(server) {
         return;
       }
 
+      /**
+       * Relays WebRTC signaling and chat messages between peers.
+       * 
+       * WHY the server doesn't inspect WebRTC messages (offer/answer/ice-candidate):
+       * The server is just a signaling channel. It blindly passes the connection details (SDP/ICE) 
+       * between the two browsers so they can establish a direct P2P connection. It doesn't 
+       * need to know what those details mean.
+       */
       if (["offer", "answer", "ice-candidate", "chat", "typing"].includes(message.type)) {
         const room = rooms.get(socket);
         if (room) {

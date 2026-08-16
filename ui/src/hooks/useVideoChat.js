@@ -23,6 +23,9 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   const [remoteVideoEnabled, setRemoteVideoEnabled] = useState(true);
   const [remoteAudioEnabled, setRemoteAudioEnabled] = useState(true);
 
+  /**
+   * Fetches TURN servers from our metered.live API to fallback when STUN fails.
+   */
   const fetchTurnServers = async () => {
     try {
       const response = await fetch('https://myapp.metered.live/api/v1/turn/credentials?apiKey=YOUR_KEY');
@@ -34,6 +37,13 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     }
   };
 
+  /**
+   * Initializes the video chat by asking for permissions and connecting to signaling.
+   * 
+   * getUserMedia:
+   * WHY we need permissions: The browser requires explicit user consent before accessing media hardware for privacy.
+   * WHAT the stream object is: It's a MediaStream containing the live video and audio tracks from the user's device.
+   */
   const init = async () => {
     await fetchTurnServers();
     if (mode === 'video') {
@@ -53,6 +63,9 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     }
   };
 
+  /**
+   * Connects to the WebSocket server for signaling.
+   */
   const connectSignaling = () => {
     const wsUrl = import.meta.env.VITE_WS_URL || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
     socketRef.current = new WebSocket(wsUrl);
@@ -93,6 +106,17 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     };
   };
 
+  /**
+   * Sets up the WebRTC Peer Connection for P2P video/audio.
+   * @param {boolean} isInitiator - Whether this client should create the offer
+   * 
+   * WHAT ICE servers are: They help browsers find each other across the internet, bypassing firewalls and NATs.
+   * WHAT STUN does: It simply tells the browser "here is your public IP address" so it can share it with the peer.
+   * 
+   * WHY do we call createOffer only on one side?
+   * WebRTC requires an asymmetric handshake. One side (the offerer) proposes a connection, 
+   * and the other side (the answerer) accepts it. If both tried to offer, they would conflict.
+   */
   const setupPeerConnection = async (isInitiator) => {
     peerConnectionRef.current = new RTCPeerConnection({ iceServers: iceServersRef.current });
     if (localStreamRef.current) {
@@ -111,6 +135,12 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     }
   };
 
+  /**
+   * Handles an incoming WebRTC offer from the initiator.
+   * @param {Object} message - The message containing the offer
+   * 
+   * WHAT SDP is: SDP (Session Description Protocol) is a text string describing the media formats (like H.264 video) and connection info the browser supports.
+   */
   const handleOffer = async (message) => {
     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(message.offer));
     const answer = await peerConnectionRef.current.createAnswer();
@@ -118,10 +148,21 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     socketRef.current.send(JSON.stringify({ type: 'answer', answer }));
   };
 
+  /**
+   * Handles an incoming WebRTC answer.
+   * @param {Object} message - The message containing the answer
+   */
   const handleAnswer = async (message) => {
     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(message.answer));
   };
 
+  /**
+   * Handles incoming ICE candidates from the peer.
+   * @param {Object} message - The message containing the ICE candidate
+   * 
+   * WHAT ICE candidates are: They are potential network paths (IP addresses/ports) to reach the peer.
+   * WHY there are multiple: A device might have multiple IPs (Wi-Fi, Cellular, VPN), and ICE tries them all to find the best route.
+   */
   const handleIceCandidate = async (message) => {
     try {
       if (peerConnectionRef.current?.remoteDescription) {
@@ -132,6 +173,9 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     }
   };
 
+  /**
+   * Cleans up the connection when the peer leaves.
+   */
   const handlePeerLeft = () => {
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     if (peerConnectionRef.current) { peerConnectionRef.current.close(); peerConnectionRef.current = null; }
@@ -139,6 +183,9 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     setSpyState(null); setRemoteVideoEnabled(true); setRemoteAudioEnabled(true); setStatus('disconnected');
   };
 
+  /**
+   * Leaves the current room and joins the waiting queue for a new stranger.
+   */
   const findStranger = () => {
     setStatus('idle'); setMessages([]); setIsStrangerTyping(false); setCommonInterests([]);
     setShowReportModal(false); setSpyState(null); setRemoteVideoEnabled(true); setRemoteAudioEnabled(true);
@@ -148,6 +195,9 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     setTimeout(() => socketRef.current.send(JSON.stringify({ type: 'join', tags: interests, mode, question })), 100);
   };
 
+  /**
+   * Toggles the user's video track on or off.
+   */
   const toggleVideo = () => {
     if (localStreamRef.current) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
@@ -161,6 +211,9 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     }
   };
 
+  /**
+   * Toggles the user's audio track on or off.
+   */
   const toggleAudio = () => {
     if (localStreamRef.current) {
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
@@ -174,6 +227,10 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     }
   };
 
+  /**
+   * Handles changes to the chat input and sends typing indicators.
+   * @param {Object} e - The input change event
+   */
   const handleChatInputChange = (e) => {
     setChatInput(e.target.value);
     if (status !== 'connected') return;
@@ -185,6 +242,10 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     }, 300);
   };
 
+  /**
+   * Sends a chat message to the peer.
+   * @param {Object} e - The form submit event
+   */
   const sendMessage = (e) => {
     e.preventDefault();
     if (!chatInput.trim() || status !== 'connected') return;
@@ -198,6 +259,10 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     }
   };
 
+  /**
+   * Submits a report against the current peer.
+   * @param {string} reason - The reason for the report
+   */
   const submitReport = (reason) => {
     if (socketRef.current && status === 'connected') {
       socketRef.current.send(JSON.stringify({ type: 'report', reason }));

@@ -3,6 +3,11 @@ import { useVideoChat } from '../hooks/useVideoChat.js';
 import { VideoArea } from './video/VideoArea.jsx';
 import { ChatArea } from './chat/ChatArea.jsx';
 
+/**
+ * VideoChat component.
+ * Note: The core WebRTC logic (getUserMedia, RTCPeerConnection, Offer/Answer, ICE)
+ * has been extracted into the `useVideoChat` hook.
+ */
 const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) => {
   const {
     localVideoRef, remoteVideoRef, messagesEndRef,

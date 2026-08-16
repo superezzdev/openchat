@@ -1,0 +1,25 @@
+name: "PR Size Labeler"
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  size-label:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: codelytv/pr-size-labeler@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: 'size/XS'
+          xs_max_size: '9'
+          s_label: 'size/S'
+          s_max_size: '99'
+          m_label: 'size/M'
+          m_max_size: '499'
+          l_label: 'size/L'
+          l_max_size: '9999999'
+          fail_if_xl: 'false'
