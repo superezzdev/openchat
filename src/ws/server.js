@@ -9,9 +9,11 @@ export function attachWebSocketServer(server) {
     maxPayload: 1024 * 1024,
     verifyClient: (info, cb) => {
       const origin = info.origin || info.req.headers.origin;
-      const allowedOrigin = process.env.CLIENT_ORIGIN;
-      if (allowedOrigin !== '*' && origin !== allowedOrigin) {
-        console.log(`[${new Date().toISOString()}] WebSocket connection rejected. Invalid origin: ${origin} (Expected: ${allowedOrigin})`);
+      const allowedOriginStr = process.env.CLIENT_ORIGIN || '*';
+      const allowedOrigins = allowedOriginStr === '*' ? ['*'] : allowedOriginStr.split(',').map(o => o.trim());
+      
+      if (!allowedOrigins.includes('*') && !allowedOrigins.includes(origin)) {
+        console.log(`[${new Date().toISOString()}] WebSocket connection rejected. Invalid origin: ${origin} (Expected: ${allowedOriginStr})`);
         return cb(false, 401, "Unauthorized");
       }
       cb(true);

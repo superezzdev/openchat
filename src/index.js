@@ -17,8 +17,11 @@ app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 app.use(helmet());
+const clientOrigin = process.env.CLIENT_ORIGIN || '*';
+const corsOrigin = clientOrigin === '*' ? '*' : clientOrigin.split(',').map(o => o.trim());
+
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN
+  origin: corsOrigin
 }));
 app.use(express.json());
 app.use(securityMiddleware());
