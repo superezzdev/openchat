@@ -151,13 +151,49 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
   }, [isWaiting]);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#0a0f1e', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#0f172a', display: 'flex', flexDirection: 'column', fontFamily: "'Inter', system-ui, sans-serif", overflow: 'hidden' }}>
       <style>
         {`
           @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.3; }
-            100% { transform: scale(1); opacity: 1; }
+            0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(99,102,241,0); }
+            100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+          }
+          .stop-btn {
+            background: transparent;
+            border: 1.5px solid #334155;
+            color: #94a3b8;
+            border-radius: 24px;
+            padding: 10px 28px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 32px;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          .stop-btn:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+          }
+          .report-btn {
+            margin-left: auto; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+          }
+          .report-btn:hover {
+            background: #6366f1;
+          }
+          .control-btn {
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.1); color: white; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+          }
+          .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+          }
+          .chat-input {
+            flex: 1; background: #1e293b; border: 1.5px solid transparent; border-radius: 24px; padding: 10px 16px; color: #f1f5f9; font-size: 15px; outline: none; transition: border-color 0.2s;
+          }
+          .chat-input:focus {
+            border-color: #6366f1 !important;
           }
         `}
       </style>
@@ -187,46 +223,65 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
           />
         </div>
 
+        {toastMessage && (
+          <div style={{
+            position: 'absolute', top: 72, left: '50%', transform: 'translateX(-50%)',
+            background: '#6366f1', color: 'white', padding: '8px 16px', borderRadius: 24,
+            boxShadow: '0 4px 12px rgba(99,102,241,0.4)', zIndex: 100,
+            display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 500,
+            animation: 'slide-down 0.3s ease-out forwards'
+          }}>
+            {toastMessage}
+            {commonInterests.length > 0 && commonInterests.map((interest, i) => (
+              <span key={i} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', padding: '2px 8px', borderRadius: 12, fontSize: 12 }}>
+                {interest}
+              </span>
+            ))}
+          </div>
+        )}
+
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, padding: '12px 16px', background: 'linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 100%)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: 14 }}>S</div>
-          <div style={{ color: 'white', fontSize: 15, fontWeight: 500 }}>Stranger</div>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: 14 }}>S</div>
+          <div style={{ color: '#f1f5f9', fontSize: 15, fontWeight: 500, fontFamily: "'Inter', system-ui, sans-serif" }}>Stranger</div>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', marginLeft: 4 }}></div>
-          <button onClick={() => setShowReportModal(true)} style={{ marginLeft: 'auto', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => setShowReportModal(true)} className="report-btn">
             <Flag size={18} />
           </button>
         </div>
 
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20, padding: '8px 16px max(16px, env(safe-area-inset-bottom))', background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%)', display: 'flex', justifyContent: 'center', gap: 16, alignItems: 'center' }}>
-          <button onClick={toggleAudio} style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={toggleAudio} className="control-btn">
             {!isAudioEnabled ? <MicOff size={24} /> : <Mic size={24} />}
           </button>
-          <button onClick={toggleVideo} style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={toggleVideo} className="control-btn">
             {!isVideoEnabled ? <VideoOff size={24} /> : <Video size={24} />}
           </button>
-          <button onClick={onQuit} style={{ width: 52, height: 52, borderRadius: '50%', background: '#ef4444', border: 'none', color: 'white', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={onQuit} style={{ width: 52, height: 52, borderRadius: '50%', background: '#ef4444', border: 'none', color: 'white', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(239,68,68,0.4)' }}>
             <LogOut size={24} />
           </button>
-          <button onClick={findStranger} style={{ width: 52, height: 52, borderRadius: '50%', background: '#22c55e', border: 'none', color: '#0a0f1e', fontSize: 22, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={findStranger} style={{ width: 52, height: 52, borderRadius: '50%', background: '#6366f1', border: 'none', color: '#0a0f1e', fontSize: 22, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}>
             <SkipForward size={24} />
           </button>
         </div>
 
         {isDisconnected && (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-            <div style={{ color: 'white', fontSize: 20, fontWeight: 500 }}>Stranger disconnected</div>
-            <button onClick={findStranger} style={{ height: 48, borderRadius: 24, background: '#22c55e', border: 'none', color: '#0a0f1e', padding: '0 32px', cursor: 'pointer', fontSize: 16, fontWeight: 600 }}>Find new stranger</button>
-            <button onClick={onQuit} style={{ height: 48, borderRadius: 24, background: 'transparent', border: '1px solid white', color: 'white', padding: '0 32px', cursor: 'pointer', fontSize: 16, fontWeight: 500 }}>Go home</button>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+            <div style={{ background: '#1e293b', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+              <div style={{ color: '#f1f5f9', fontSize: 18, fontWeight: 600 }}>Stranger disconnected</div>
+              <button onClick={findStranger} style={{ height: 48, borderRadius: 24, background: '#6366f1', border: 'none', color: '#ffffff', padding: '0 32px', cursor: 'pointer', fontSize: 16, fontWeight: 600, boxShadow: '0 4px 14px rgba(99,102,241,0.4)' }}>Find new stranger</button>
+              <button onClick={onQuit} style={{ height: 48, borderRadius: 24, background: 'transparent', border: '1px solid #334155', color: '#94a3b8', padding: '0 32px', cursor: 'pointer', fontSize: 16, fontWeight: 500 }}>Go home</button>
+            </div>
           </div>
         )}
       </div>
 
       {/* BOTTOM CHAT PANEL */}
       <div style={{ height: 280, flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', background: '#0d1117' }}>
-        <div style={{ height: 48, background: '#075e54', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 600 }}>S</div>
-          <div style={{ color: 'white', fontSize: 15, fontWeight: 500 }}>Stranger</div>
-          <div style={{ marginLeft: 'auto', color: '#4ade80', fontSize: 13 }}>
-            {isStrangerTyping ? 'Stranger is typing…' : ''}
+        <div style={{ height: 48, background: '#1e293b', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 10, borderLeft: '3px solid #6366f1' }}>
+          <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 600 }}>S</div>
+          <div style={{ color: '#f1f5f9', fontSize: 15, fontWeight: 500 }}>Stranger</div>
+          <div style={{ marginLeft: 'auto', color: '#6366f1', fontSize: 13 }}>
+            {isStrangerTyping ? 'typing…' : (isConnected ? 'connected' : '')}
           </div>
         </div>
         
@@ -234,8 +289,12 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
           {messages.map((msg, idx) => {
             if (msg.sender === 'system') {
               return (
-                <div key={idx} style={{ textAlign: 'center', fontSize: 12, color: '#4b5563', padding: '4px 0' }}>
-                  {msg.text}
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                  <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+                  <div style={{ textAlign: 'center', fontSize: 12, color: '#475569' }}>
+                    {msg.text}
+                  </div>
+                  <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
                 </div>
               );
             }
@@ -243,16 +302,18 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
             return (
               <div key={idx} style={{ 
                 alignSelf: isMe ? 'flex-end' : 'flex-start',
-                background: isMe ? '#075e54' : '#1f2937',
-                color: isMe ? 'white' : '#e5e7eb',
+                background: isMe ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : '#1e293b',
+                color: isMe ? '#ffffff' : '#e2e8f0',
                 padding: '8px 12px',
-                borderRadius: isMe ? '18px 4px 18px 18px' : '4px 18px 18px 18px',
+                borderRadius: isMe ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
+                border: isMe ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                boxShadow: isMe ? '0 2px 8px rgba(99,102,241,0.3)' : 'none',
                 maxWidth: '75%',
                 fontSize: 14,
                 lineHeight: 1.4
               }}>
                 <div>{msg.text}</div>
-                <span style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.4)', textAlign: 'right', marginTop: 4 }}>
+                <span style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'right', marginTop: 4 }}>
                   {getTimestamp(msg)}
                 </span>
               </div>
@@ -261,7 +322,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
           <div ref={messagesEndRef} />
         </div>
         
-        <div style={{ height: 56, background: '#111827', paddingBottom: 'env(safe-area-inset-bottom)', display: 'flex', alignItems: 'center', padding: '8px 12px' }}>
+        <div style={{ height: 56, background: '#0d1117', borderTop: '1px solid #1e293b', paddingBottom: 'env(safe-area-inset-bottom)', display: 'flex', alignItems: 'center', padding: '8px 12px' }}>
           <form onSubmit={(e) => { e.preventDefault(); if (chatInput.trim()) sendMessage(); }} style={{ display: 'flex', gap: 8, width: '100%', alignItems: 'center' }}>
             <input
               type="text"
@@ -269,9 +330,9 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
               onChange={handleChatInputChange}
               placeholder="Type a message…"
               disabled={!isConnected}
-              style={{ flex: 1, background: '#1f2937', border: 'none', borderRadius: 24, padding: '10px 16px', color: '#f9fafb', fontSize: 16, outline: 'none' }}
+              className="chat-input"
             />
-            <button type="submit" disabled={!isConnected || !chatInput.trim()} style={{ width: 40, height: 40, borderRadius: '50%', background: '#22c55e', border: 'none', color: '#0a0f1e', fontSize: 18, cursor: 'pointer', flexShrink: 0, opacity: (!isConnected || !chatInput.trim()) ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type="submit" disabled={!isConnected || !chatInput.trim()} style={{ width: 40, height: 40, borderRadius: '50%', background: (!isConnected || !chatInput.trim()) ? '#1e293b' : '#6366f1', border: 'none', color: (!isConnected || !chatInput.trim()) ? '#475569' : '#ffffff', fontSize: 18, cursor: 'pointer', flexShrink: 0, boxShadow: (!isConnected || !chatInput.trim()) ? 'none' : '0 2px 8px rgba(99,102,241,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Send size={18} />
             </button>
           </form>
@@ -279,11 +340,11 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
       </div>
 
       {isWaiting && (
-        <div style={{ position: 'absolute', inset: 0, background: '#0a0f1e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ width: 64, height: 64, background: '#22c55e', borderRadius: '50%', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
-          <div style={{ color: 'white', fontSize: 20, marginTop: 24 }}>Looking for a stranger…</div>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, marginTop: 8 }}>Searching for {waitSeconds}s…</div>
-          <button onClick={onQuit} style={{ height: 44, borderRadius: 22, background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'white', marginTop: 32, padding: '0 32px', cursor: 'pointer', fontSize: 16 }}>Stop</button>
+        <div style={{ position: 'absolute', inset: 0, background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+          <div style={{ width: 64, height: 64, background: '#6366f1', borderRadius: '50%', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+          <div style={{ color: '#f1f5f9', fontFamily: "'Inter', system-ui, sans-serif", fontSize: 20, marginTop: 24 }}>Looking for a stranger…</div>
+          <div style={{ color: '#64748b', fontSize: 14, marginTop: 8 }}>Searching for {waitSeconds}s…</div>
+          <button onClick={onQuit} className="stop-btn">Stop</button>
         </div>
       )}
 
