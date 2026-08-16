@@ -106,6 +106,8 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
         case 'waiting': setStatus('waiting'); break;
         case 'matched':
           setStatus('connected');
+          setToastMessage("🎉 Stranger connected!");
+          setTimeout(() => setToastMessage(""), 2500);
           setCommonInterests(message.commonInterests || []);
           if (message.isSpy || message.isSpyStranger) {
             setSpyState({ isSpy: message.isSpy, isSpyStranger: message.isSpyStranger, question: message.question, peerId: message.peerId });
@@ -249,12 +251,14 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   };
 
   /**
-   * Cleans up the connection when the peer leaves and automatically looks for a new stranger.
+   * Handles the event when the peer leaves the connection.
    */
   const handlePeerLeft = () => {
-    setToastMessage("Stranger disconnected. Looking for someone else...");
-    setTimeout(() => setToastMessage(""), 2500);
-    findStranger();
+    setStatus('disconnected');
+    if (peerConnectionRef.current) { 
+      peerConnectionRef.current.close(); 
+      peerConnectionRef.current = null; 
+    }
   };
 
   /**

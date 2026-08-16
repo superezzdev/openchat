@@ -1,0 +1,25 @@
+--- ui/src/components/Home.jsx
++++ ui/src/components/Home.jsx
+@@ -84,9 +84,9 @@
+       {/* Main Content */}
+       <main className="flex-1 flex flex-col items-center justify-center px-4 pt-8 pb-20 w-full max-w-[800px] mx-auto relative z-10">
+         <div className="text-center mb-10">
+-          <h1 className="text-5xl md:text-[64px] font-[800] tracking-tight leading-[1.05] mb-5">
++          <h1 className="text-4xl sm:text-5xl md:text-[64px] font-[800] tracking-tight leading-[1.05] mb-5">
+             <span className="text-[#0E1528] block">Meet someone</span>
+             <span className="text-[#6D7787] block">new, right now</span>
+           </h1>
+-          <p className="text-[17px] md:text-[19px] text-[#5C677D] font-medium mt-6">
++          <p className="text-[15px] sm:text-[17px] md:text-[19px] text-[#5C677D] font-medium mt-6">
+             One click. A real person. No accounts, no history.
+           </p>
+         </div>
+@@ -115,7 +115,7 @@
+             </div>
+           </div>
+ 
+-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
++          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+             <button 
+               onClick={() => setMode('video')}
+               className={`flex flex-col items-center justify-center gap-2.5 py-5 rounded-[20px] border-[1.5px] transition-all ${mode === 'video' ? 'bg-[#374151] border-[#374151] text-white shadow-md' : 'bg-white border-[#F3F4F6] text-[#6B7280] hover:border-[#E5E7EB] hover:bg-[#F9FAFB]'}`}
