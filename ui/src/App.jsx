@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Home from "./components/Home";
 import VideoChat from "./components/VideoChat";
 
@@ -7,6 +7,29 @@ function App() {
   const [interests, setInterests] = useState([]);
   const [mode, setMode] = useState('video');
   const [question, setQuestion] = useState("");
+  const [onlineCount, setOnlineCount] = useState(0);
+
+  useEffect(() => {
+    if (isChatting) return;
+
+    const wsUrl = import.meta.env.VITE_WS_URL || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'userCount') {
+          setOnlineCount(data.count);
+        }
+      } catch (e) {
+        console.error("Error parsing websocket message", e);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [isChatting]);
 
   const handleStart = (tags, selectedMode, userQuestion = "") => {
     setInterests(tags);
@@ -20,7 +43,7 @@ function App() {
       {isChatting ? (
         <VideoChat interests={interests} mode={mode} question={question} onQuit={() => setIsChatting(false)} />
       ) : (
-        <Home onStart={handleStart} />
+        <Home onStart={handleStart} onlineCount={onlineCount} />
       )}
     </div>
   );

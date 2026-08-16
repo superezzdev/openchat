@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
   font-size: 16px;
@@ -14,6 +14,42 @@
   --color-border: #222222;
   
   --font-sans: "Inter", system-ui, sans-serif;
+
+  /* Light theme — new brand */
+  --page-bg: #eef0f5;
+  --card-bg: #ffffff;
+  --nav-bg: rgba(255,255,255,0.85);
+
+  /* Typography */
+  --text-heading: #0f172a;
+  --text-body: #475569;
+  --text-muted: #94a3b8;
+  --text-on-accent: #ffffff;
+
+  /* Brand */
+  --brand: #6366f1;          /* indigo — primary accent */
+  --brand-dark: #4f46e5;
+  --brand-light: #eef2ff;
+  --brand-muted: rgba(99,102,241,0.12);
+
+  /* Surfaces */
+  --surface-card: #ffffff;
+  --surface-input: #f1f5f9;
+  --surface-mode-unsel: #f8fafc;
+  --surface-mode-sel: #0f172a;
+
+  /* Borders */
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+
+  /* States */
+  --online-green: #22c55e;
+  --danger: #ef4444;
+  --next-green: #10b981;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-btn: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 /* 1. CSS Reset */
@@ -26,9 +62,10 @@ html, body {
   padding: 0;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  font-family: var(--font-sans);
-  background-color: var(--color-xbg);
-  color: var(--color-xblack);
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--page-bg);
+  color: var(--text-body);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* 2. Full-viewport app shell (zero scrolling) */
