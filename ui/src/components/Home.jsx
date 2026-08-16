@@ -25,11 +25,11 @@ const Home = ({ onStart }) => {
           <span className="text-primary font-bold tracking-widest uppercase text-sm">Welcome to</span>
         </div>
         
-        <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 drop-shadow-xl">
-          Meet<span className="text-primary">Strangers.</span>
+        <h1 className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-4 md:mb-8 drop-shadow-xl">
+          open<span className="text-primary">chat.</span>
         </h1>
         
-        <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mb-8 leading-relaxed">
+        <p className="text-lg md:text-2xl text-gray-400 max-w-2xl mb-8 leading-relaxed px-2 md:px-0">
           The fastest way to meet new people. No login, no database, completely anonymous peer-to-peer video chat.
         </p>
 
@@ -65,39 +65,41 @@ const Home = ({ onStart }) => {
         </div>
 
         {/* Mode Selection */}
-        <div className="flex gap-4 mb-16 w-full max-w-md">
+        <div className="flex gap-2 sm:gap-4 mb-10 md:mb-16 w-full max-w-md px-2 md:px-0">
           <button 
             onClick={() => setMode('video')}
-            className={`flex-1 py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${mode === 'video' ? 'bg-primary/20 border-primary text-primary' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
+            className={`flex-1 py-3 sm:py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 sm:gap-2 ${mode === 'video' ? 'bg-primary/20 border-primary text-primary' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
           >
-            <Video size={28} />
-            <span className="font-bold">Video Chat</span>
+            <Video size={24} className="sm:w-[28px] sm:h-[28px]" />
+            <span className="font-bold text-sm sm:text-base">Video Chat</span>
           </button>
           <button 
             onClick={() => setMode('text')}
-            className={`flex-1 py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${mode === 'text' ? 'bg-primary/20 border-primary text-primary' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
+            className={`flex-1 py-3 sm:py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 sm:gap-2 ${mode === 'text' ? 'bg-primary/20 border-primary text-primary' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
           >
-            <MessageSquare size={28} />
-            <span className="font-bold">Text Only</span>
+            <MessageSquare size={24} className="sm:w-[28px] sm:h-[28px]" />
+            <span className="font-bold text-sm sm:text-base">Text Only</span>
           </button>
           <button 
             onClick={() => setMode('spy')}
-            className={`flex-1 py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${mode === 'spy' ? 'bg-primary/20 border-primary text-primary' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
+            className={`flex-1 py-3 sm:py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 sm:gap-2 ${mode === 'spy' ? 'bg-primary/20 border-primary text-primary' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
           >
-            <Search size={28} />
-            <span className="font-bold">Spy Mode</span>
+            <Search size={24} className="sm:w-[28px] sm:h-[28px]" />
+            <span className="font-bold text-sm sm:text-base">Spy Mode</span>
           </button>
         </div>
 
         {/* Start Button */}
-        <button 
-          onClick={handleStart}
-          className="group relative px-8 py-5 bg-primary text-black font-black text-2xl rounded-full uppercase tracking-wider overflow-hidden transition-transform hover:scale-105 shadow-[0_8px_0_0_#111] hover:shadow-[0_4px_0_0_#111] hover:translate-y-1 mb-16 flex items-center gap-4 w-full max-w-md justify-center"
-        >
-          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
-          {mode === 'video' ? <Video size={32} /> : mode === 'text' ? <MessageSquare size={32} /> : <Search size={32} />}
-          <span className="relative z-10">Start {mode === 'video' ? 'Video' : mode === 'text' ? 'Chat' : 'Spying'}</span>
-        </button>
+        <div className="w-full px-2 md:px-0 flex justify-center">
+          <button 
+            onClick={handleStart}
+            className="group relative px-6 py-4 md:px-8 md:py-5 bg-primary text-black font-black text-xl md:text-2xl rounded-full uppercase tracking-wider overflow-hidden transition-transform hover:scale-105 shadow-[0_6px_0_0_#111] md:shadow-[0_8px_0_0_#111] hover:shadow-[0_3px_0_0_#111] md:hover:shadow-[0_4px_0_0_#111] hover:translate-y-1 mb-12 md:mb-16 flex items-center gap-3 md:gap-4 w-full max-w-md justify-center"
+          >
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+            {mode === 'video' ? <Video size={28} className="md:w-[32px] md:h-[32px]" /> : mode === 'text' ? <MessageSquare size={28} className="md:w-[32px] md:h-[32px]" /> : <Search size={28} className="md:w-[32px] md:h-[32px]" />}
+            <span className="relative z-10">Start {mode === 'video' ? 'Video' : mode === 'text' ? 'Chat' : 'Spying'}</span>
+          </button>
+        </div>
 
         {/* Features / Rules */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-3xl text-left border-t border-white/10 pt-16">

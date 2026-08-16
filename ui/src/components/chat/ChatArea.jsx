@@ -8,26 +8,22 @@ export const ChatArea = ({
 }) => {
   return (
     <div className={`${(mode === 'video' && !spyState?.isSpy) ? 'w-full md:w-80 lg:w-96 md:border-l md:flex-none' : 'w-full'} bg-[#111] border-t md:border-t-0 border-white/10 flex flex-col flex-1 md:h-full shrink-0 relative ${mode === 'video' ? 'pb-[72px] md:pb-0' : ''}`}>
-      <div className="p-4 border-b border-white/10 bg-[#1a1a1a] flex justify-between items-center">
-        <div>
+      <div className="px-4 py-3 border-b border-white/5 bg-[#141414] flex justify-between items-center shadow-sm shrink-0">
+        <div className="flex flex-col">
           <div className="flex items-center gap-3">
-            {(mode === 'text' || spyState?.isSpy) ? (
-              <h1 className="text-primary text-xl font-black tracking-tighter">openchat.</h1>
-            ) : (
-              <h2 className="text-white font-bold text-lg">Live Chat</h2>
-            )}
+            <h1 className="text-primary text-xl md:text-2xl font-black tracking-tighter drop-shadow-md">openchat.</h1>
             {(mode === 'text' || mode === 'spy' || spyState?.isSpy) && (
-              <div className="bg-white/10 border border-white/20 rounded-full px-3 py-1 flex items-center gap-2 shadow-sm">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-white text-xs font-medium">{userCount} people online</span>
+              <div className="bg-black/50 border border-white/10 rounded-full px-2.5 py-1 flex items-center gap-2 shadow-inner">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                <span className="text-gray-300 text-[10px] md:text-xs font-bold tracking-wider">{userCount} <span className="hidden sm:inline">ONLINE</span></span>
               </div>
             )}
           </div>
           {(mode === 'text' || mode === 'spy' || spyState?.isSpy) && status === 'connected' && commonInterests.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1.5 items-center">
-              <span className="text-gray-400 text-xs font-medium mr-1">You both like:</span>
+            <div className="mt-2 flex flex-wrap gap-1.5 items-center">
+              <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mr-1">Shared Interests:</span>
               {commonInterests.map((interest, i) => (
-                <span key={i} className="bg-white/5 border border-white/10 text-gray-300 text-[10px] px-2 py-0.5 rounded-full capitalize shadow-sm">
+                <span key={i} className="bg-white/10 border border-white/10 text-white text-[10px] px-2 py-0.5 rounded-full capitalize shadow-sm">
                   {interest}
                 </span>
               ))}
@@ -39,26 +35,41 @@ export const ChatArea = ({
               <span className="text-primary text-[10px] font-bold uppercase tracking-wider mb-0.5">
                 {spyState.isSpy ? 'You asked:' : 'Spy Question:'}
               </span>
-              <p className="text-white text-sm font-medium bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+              <p className="text-white text-xs md:text-sm font-medium bg-black/30 px-3 py-2 rounded-lg border border-white/5">
                 "{spyState.question}"
               </p>
               {spyState.isSpyStranger && (
-                <span className="text-gray-400 text-xs mt-1">You are Stranger {spyState.peerId}</span>
+                <span className="text-gray-500 text-[10px] mt-1 uppercase font-bold tracking-wider">You are Stranger {spyState.peerId}</span>
               )}
             </div>
           )}
         </div>
         
         {(mode === 'text' || mode === 'spy' || spyState?.isSpy) && (
-          <div className="flex gap-2">
-            <button onClick={() => setShowReportModal(true)} className="bg-red-500/20 hover:bg-red-500/40 text-red-500 border border-red-500/30 font-bold px-3 py-1.5 rounded-full flex items-center gap-1 text-xs transition-colors">
-              <Flag size={14} /> Report
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowReportModal(true)} 
+              className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full flex items-center justify-center gap-1.5 transition-all"
+              title="Report"
+            >
+              <Flag size={14} className="md:w-[16px] md:h-[16px]" /> 
+              <span className="hidden md:inline font-bold text-xs uppercase tracking-wider">Report</span>
             </button>
-            <button onClick={findStranger} className="bg-primary hover:bg-primary-dark text-black font-bold px-4 py-1.5 rounded-full flex items-center gap-1 text-sm shadow-sm transition-transform hover:scale-105">
-              <SkipForward size={16} fill="currentColor" /> Next
+            <button 
+              onClick={findStranger} 
+              className="bg-primary hover:bg-primary-dark text-black w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full flex items-center justify-center gap-1.5 shadow-[0_2px_0_0_rgba(0,0,0,0.3)] md:shadow-[0_4px_0_0_rgba(0,0,0,0.3)] transition-transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-none"
+              title="Next"
+            >
+              <SkipForward size={14} className="md:w-[16px] md:h-[16px]" fill="currentColor" /> 
+              <span className="hidden md:inline font-black text-xs uppercase tracking-wider">Next</span>
             </button>
-            <button onClick={onQuit} className="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded-full flex items-center gap-1 text-sm shadow-sm transition-transform hover:scale-105">
-              <LogOut size={16} /> Quit
+            <button 
+              onClick={onQuit} 
+              className="bg-white/10 hover:bg-white/20 text-white w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full flex items-center justify-center gap-1.5 transition-all"
+              title="Quit"
+            >
+              <LogOut size={14} className="md:w-[16px] md:h-[16px]" /> 
+              <span className="hidden md:inline font-bold text-xs uppercase tracking-wider">Quit</span>
             </button>
           </div>
         )}
