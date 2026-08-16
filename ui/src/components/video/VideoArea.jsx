@@ -73,7 +73,7 @@ export const VideoArea = ({
       {status === 'connected' && (
         <button
           onClick={() => setShowReportModal(true)}
-          className="absolute bottom-6 left-6 z-30 bg-red-500/20 hover:bg-red-500/40 text-red-500 border border-red-500/30 rounded-full px-4 py-2 flex items-center gap-2 transition-colors backdrop-blur-md text-sm font-bold shadow-sm"
+          className="absolute bottom-[max(24px,env(safe-area-inset-bottom))] left-6 z-30 bg-red-500/20 hover:bg-red-500/40 text-red-500 border border-red-500/30 rounded-full px-4 py-2 min-h-[44px] flex items-center justify-center gap-2 transition-colors backdrop-blur-md text-sm font-bold shadow-sm"
         >
           <Flag size={16} />
           Report
@@ -99,17 +99,17 @@ export const VideoArea = ({
       </div>
 
       {/* Controls */}
-      <div className="fixed md:absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto flex justify-center items-center gap-3 md:gap-4 z-[60] bg-[#111] md:bg-black/50 p-3 md:p-3 md:rounded-full md:backdrop-blur-md border-t md:border-t-0 md:border border-white/10">
+      <div className="fixed md:absolute bottom-0 md:bottom-8 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto flex justify-center items-center gap-3 md:gap-4 z-[60] bg-[#111] md:bg-black/50 p-3 md:p-3 md:rounded-full md:backdrop-blur-md border-t md:border-t-0 md:border border-white/10 pb-[max(12px,env(safe-area-inset-bottom))] md:pb-3">
         <button 
           onClick={toggleAudio}
-          className={`p-3 md:p-4 rounded-full transition-colors ${isAudioEnabled ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+          className={`p-3 md:p-4 min-w-[44px] min-h-[44px] rounded-full transition-colors ${isAudioEnabled ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
         >
           {isAudioEnabled ? <Mic size={20} className="md:w-6 md:h-6" /> : <MicOff size={20} className="md:w-6 md:h-6" />}
         </button>
         
         <button 
           onClick={toggleVideo}
-          className={`p-3 md:p-4 rounded-full transition-colors ${isVideoEnabled ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+          className={`p-3 md:p-4 min-w-[44px] min-h-[44px] rounded-full transition-colors ${isVideoEnabled ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
         >
           {isVideoEnabled ? <Video size={20} className="md:w-6 md:h-6" /> : <VideoOff size={20} className="md:w-6 md:h-6" />}
         </button>
@@ -118,7 +118,7 @@ export const VideoArea = ({
 
         <button 
           onClick={findStranger}
-          className="bg-primary hover:bg-primary-dark text-black font-bold p-3 md:p-4 rounded-full flex items-center gap-2 transition-transform hover:scale-105 shadow-[0_4px_0_0_#111]"
+          className="bg-primary hover:bg-primary-dark text-black font-bold p-3 md:p-4 min-w-[44px] min-h-[44px] rounded-full flex items-center gap-2 transition-transform hover:scale-105 shadow-[0_4px_0_0_#111]"
         >
           <SkipForward size={20} className="md:w-6 md:h-6" fill="currentColor" />
           <span className="hidden sm:inline pr-2 tracking-wide uppercase">Next</span>
@@ -128,7 +128,7 @@ export const VideoArea = ({
 
         <button 
           onClick={onQuit}
-          className="bg-red-600 hover:bg-red-700 text-white font-bold p-3 md:p-4 rounded-full flex items-center gap-2 transition-transform hover:scale-105 shadow-[0_4px_0_0_#111]"
+          className="bg-red-600 hover:bg-red-700 text-white font-bold p-3 md:p-4 min-w-[44px] min-h-[44px] rounded-full flex items-center gap-2 transition-transform hover:scale-105 shadow-[0_4px_0_0_#111]"
         >
           <LogOut size={20} className="md:w-6 md:h-6" />
           <span className="hidden sm:inline pr-2 tracking-wide uppercase">Quit</span>
@@ -187,7 +187,7 @@ export const VideoArea = ({
             </div>
             <button 
               onClick={() => setShowReportModal(false)}
-              className="mt-6 w-full text-gray-500 hover:text-white transition-colors text-sm font-bold uppercase tracking-wider"
+              className="mt-6 w-full text-gray-500 hover:text-white transition-colors text-sm font-bold uppercase tracking-wider min-h-[44px]"
             >
               Cancel
             </button>
