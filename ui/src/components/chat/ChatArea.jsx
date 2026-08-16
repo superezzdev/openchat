@@ -11,7 +11,13 @@ export const ChatArea = ({
       <div className="px-4 py-3 border-b border-white/5 bg-[#141414] flex justify-between items-center shadow-sm shrink-0">
         <div className="flex flex-col">
           <div className="flex items-center gap-3">
-            <h1 className="text-primary text-xl md:text-2xl font-black tracking-tighter drop-shadow-md">openchat.</h1>
+            <h1 className="text-primary text-xl md:text-2xl font-black tracking-tighter drop-shadow-md flex items-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <circle cx="9" cy="12" r="5" />
+                <circle cx="15" cy="12" r="5" />
+              </svg>
+              randall
+            </h1>
             {(mode === 'text' || mode === 'spy' || spyState?.isSpy) && (
               <div className="bg-black/50 border border-white/10 rounded-full px-2.5 py-1 flex items-center gap-2 shadow-inner">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>

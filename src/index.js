@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config.js";
 
 import express from "express";
 import http from "http";
@@ -37,8 +36,16 @@ server.listen(PORT, HOST, () => {
   console.log(`[${new Date().toISOString()}] WebSocket Signaling server is running at ${baseUrl.replace('http://', 'ws://')}/ws`);
 });
 
-process.on("SIGTERM", () => {
-  console.log(`\n[${new Date().toISOString()}] SIGTERM received. Shutting down gracefully...`);
+const shutdown = () => {
+  console.log(`\n[${new Date().toISOString()}] Shutdown signal received. Shutting down gracefully...`);
+  
+  // Forcibly close all active WebSocket clients so wss.close() doesn't hang
+  if (wss.clients) {
+    for (const client of wss.clients) {
+      client.terminate();
+    }
+  }
+
   wss.close(() => {
     console.log(`[${new Date().toISOString()}] WebSocket server closed.`);
     server.close(() => {
@@ -46,4 +53,13 @@ process.on("SIGTERM", () => {
       process.exit(0);
     });
   });
-});
+
+  // Failsafe to forcefully exit if connections aren't closed in time
+  setTimeout(() => {
+    console.error(`[${new Date().toISOString()}] Could not close connections in time, forcefully shutting down`);
+    process.exit(1);
+  }, 3000).unref();
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 
+function setVideoBitrate(sdp, bitrate) {
+  return sdp.replace(
+    /b=AS:\d+/g,
+    `b=AS:${bitrate}`
+  ).replace(
+    /(m=video.*\r\n)/,
+    `$1b=AS:${bitrate}\r\n`
+  );
+}
+
 export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -9,6 +19,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const iceServersRef = useRef([{ urls: 'stun:stun.l.google.com:19302' }]);
+  const iceCandidateQueue = useRef([]);
 
   const [status, setStatus] = useState('idle');
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -22,6 +33,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   const [spyState, setSpyState] = useState(null);
   const [remoteVideoEnabled, setRemoteVideoEnabled] = useState(true);
   const [remoteAudioEnabled, setRemoteAudioEnabled] = useState(true);
+  const [toastMessage, setToastMessage] = useState("");
 
   /**
    * Fetches TURN servers from our metered.live API to fallback when STUN fails.
@@ -39,22 +51,38 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
 
   /**
    * Initializes the video chat by asking for permissions and connecting to signaling.
-   * 
-   * getUserMedia:
-   * WHY we need permissions: The browser requires explicit user consent before accessing media hardware for privacy.
-   * WHAT the stream object is: It's a MediaStream containing the live video and audio tracks from the user's device.
    */
-  const init = async () => {
+  const init = async (isMounted) => {
     await fetchTurnServers();
+    if (!isMounted()) return;
+
     if (mode === 'video') {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+            facingMode: 'user',
+            aspectRatio: 16/9
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000
+          }
+        });
+        if (!isMounted()) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
         localStreamRef.current = stream;
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
         connectSignaling();
       } catch (err) {
         console.error("Failed to access camera/mic", err);
-        setStatus('error');
+        if (isMounted()) setStatus('error');
       }
     } else {
       setIsVideoEnabled(false);
@@ -128,8 +156,39 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     peerConnectionRef.current.onicecandidate = (event) => {
       if (event.candidate) socketRef.current.send(JSON.stringify({ type: 'ice-candidate', candidate: event.candidate }));
     };
+
+    peerConnectionRef.current.onconnectionstatechange = async () => {
+      if (peerConnectionRef.current.connectionState === 'connected') {
+        const sender = peerConnectionRef.current.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) {
+          const params = sender.getParameters();
+          if (!params.encodings) params.encodings = [{}];
+          params.encodings[0].maxBitrate = 2500000;
+          params.encodings[0].maxFramerate = 30;
+          params.encodings[0].networkPriority = 'high';
+          await sender.setParameters(params);
+        }
+      }
+    };
+
+    peerConnectionRef.current.oniceconnectionstatechange = () => {
+      const state = peerConnectionRef.current.iceConnectionState;
+      if (state === 'disconnected') {
+        setTimeout(() => {
+          if (peerConnectionRef.current && peerConnectionRef.current.iceConnectionState === 'disconnected') {
+            peerConnectionRef.current.restartIce();
+          }
+        }, 3000);
+      } else if (state === 'failed') {
+        setToastMessage("Connection lost — finding a new stranger...");
+        findStranger();
+        setTimeout(() => setToastMessage(""), 3000);
+      }
+    };
+
     if (isInitiator) {
       const offer = await peerConnectionRef.current.createOffer();
+      offer.sdp = setVideoBitrate(offer.sdp, 2500);
       await peerConnectionRef.current.setLocalDescription(offer);
       socketRef.current.send(JSON.stringify({ type: 'offer', offer }));
     }
@@ -144,8 +203,21 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   const handleOffer = async (message) => {
     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(message.offer));
     const answer = await peerConnectionRef.current.createAnswer();
+    answer.sdp = setVideoBitrate(answer.sdp, 2500);
     await peerConnectionRef.current.setLocalDescription(answer);
     socketRef.current.send(JSON.stringify({ type: 'answer', answer }));
+    processIceQueue();
+  };
+
+  const processIceQueue = async () => {
+    while (iceCandidateQueue.current.length > 0) {
+      const candidate = iceCandidateQueue.current.shift();
+      try {
+        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (e) {
+        console.error('Error adding queued ice candidate', e);
+      }
+    }
   };
 
   /**
@@ -154,6 +226,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
    */
   const handleAnswer = async (message) => {
     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(message.answer));
+    processIceQueue();
   };
 
   /**
@@ -167,6 +240,8 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     try {
       if (peerConnectionRef.current?.remoteDescription) {
         await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(message.candidate));
+      } else {
+        iceCandidateQueue.current.push(message.candidate);
       }
     } catch (e) {
       console.error('Error adding received ice candidate', e);
@@ -174,13 +249,12 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   };
 
   /**
-   * Cleans up the connection when the peer leaves.
+   * Cleans up the connection when the peer leaves and automatically looks for a new stranger.
    */
   const handlePeerLeft = () => {
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-    if (peerConnectionRef.current) { peerConnectionRef.current.close(); peerConnectionRef.current = null; }
-    setMessages([]); setIsStrangerTyping(false); setCommonInterests([]); setShowReportModal(false);
-    setSpyState(null); setRemoteVideoEnabled(true); setRemoteAudioEnabled(true); setStatus('disconnected');
+    setToastMessage("Stranger disconnected. Looking for someone else...");
+    setTimeout(() => setToastMessage(""), 2500);
+    findStranger();
   };
 
   /**
@@ -189,6 +263,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   const findStranger = () => {
     setStatus('idle'); setMessages([]); setIsStrangerTyping(false); setCommonInterests([]);
     setShowReportModal(false); setSpyState(null); setRemoteVideoEnabled(true); setRemoteAudioEnabled(true);
+    iceCandidateQueue.current = [];
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     if (peerConnectionRef.current) { peerConnectionRef.current.close(); peerConnectionRef.current = null; }
     socketRef.current.send(JSON.stringify({ type: 'leave' }));
@@ -247,7 +322,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
    * @param {Object} e - The form submit event
    */
   const sendMessage = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!chatInput.trim() || status !== 'connected') return;
     socketRef.current.send(JSON.stringify({ type: 'chat', text: chatInput }));
     setMessages(prev => [...prev, { text: chatInput, isSent: true }]);
@@ -272,8 +347,13 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   };
 
   useEffect(() => {
-    init();
+    let mounted = true;
+    const isMounted = () => mounted;
+    
+    init(isMounted);
+    
     return () => {
+      mounted = false;
       if (localStreamRef.current) localStreamRef.current.getTracks().forEach(track => track.stop());
       if (peerConnectionRef.current) peerConnectionRef.current.close();
       if (socketRef.current) socketRef.current.close();
@@ -288,7 +368,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     localVideoRef, remoteVideoRef, messagesEndRef,
     status, isVideoEnabled, isAudioEnabled, messages, chatInput,
     isStrangerTyping, commonInterests, userCount, showReportModal, setShowReportModal,
-    spyState, remoteVideoEnabled, remoteAudioEnabled,
+    spyState, remoteVideoEnabled, remoteAudioEnabled, toastMessage,
     toggleVideo, toggleAudio, handleChatInputChange, sendMessage, submitReport, findStranger
   };
 };

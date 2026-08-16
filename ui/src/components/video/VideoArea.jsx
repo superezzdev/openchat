@@ -137,7 +137,13 @@ export const VideoArea = ({
 
       {/* Logo */}
       <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
-        <h1 className="text-primary text-2xl md:text-3xl font-black tracking-tighter drop-shadow-lg">openchat.</h1>
+        <h1 className="text-primary text-2xl md:text-3xl font-black tracking-tighter drop-shadow-lg flex items-center">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+            <circle cx="9" cy="12" r="5" />
+            <circle cx="15" cy="12" r="5" />
+          </svg>
+          randall
+        </h1>
         
         {status === 'connected' && commonInterests.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2 items-center">

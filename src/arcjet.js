@@ -4,7 +4,7 @@ const arcjetKey = process.env.ARCJET_KEY;
 const arcjetMode = process.env.NODE_ENV === "development" ? "DRY_RUN" : "LIVE";
 
 if (!arcjetKey) {
-  throw new Error("ARCJET_KEY environment variable is missing.");
+  console.warn("⚠️ ARCJET_KEY environment variable is missing. Security features will be disabled.");
 }
 
 export const httpArcjet = arcjetKey

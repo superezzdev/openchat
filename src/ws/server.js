@@ -140,28 +140,10 @@ export function attachWebSocketServer(server) {
     socket.id = crypto.randomUUID();
     console.log(`[${new Date().toISOString()}] WebSocket connected: ${socket.id}`);
 
-    if (wsArcjet) {
-      try {
-        const ipSrc = req.headers["x-forwarded-for"]?.split(',')[0] || req.socket?.remoteAddress;
-        const decision = await wsArcjet.protect(req, { ipSrc });
-        if (decision.isDenied()) {
-          socket.close(1008, "Access denied");
-          return;
-        }
-      } catch (e) {
-        socket.close(1011, "Server security error");
-        return;
-      }
-    }
+    let isAuthenticated = !wsArcjet;
+    const messageQueue = [];
 
-    socket.isAlive = true;
-    broadcastUserCount();
-
-    socket.on("pong", () => {
-      socket.isAlive = true;
-    });
-
-    socket.on("message", (data) => {
+    const processMessage = (data) => {
       let message;
       try {
         message = JSON.parse(data.toString());
@@ -262,20 +244,26 @@ export function attachWebSocketServer(server) {
 
       /**
        * Relays WebRTC signaling and chat messages between peers.
-       * 
-       * WHY the server doesn't inspect WebRTC messages (offer/answer/ice-candidate):
-       * The server is just a signaling channel. It blindly passes the connection details (SDP/ICE) 
-       * between the two browsers so they can establish a direct P2P connection. It doesn't 
-       * need to know what those details mean.
        */
-      if (["offer", "answer", "ice-candidate", "chat", "typing"].includes(message.type)) {
+      if (["offer", "answer", "ice-candidate", "chat", "typing", "mediaState"].includes(message.type)) {
         const room = rooms.get(socket);
         if (room) {
           for (const s of room.sockets) {
             if (s !== socket && s.readyState === WebSocket.OPEN) {
+              if (room.type === 'spy' && ["offer", "answer", "ice-candidate", "mediaState"].includes(message.type) && s === room.spySocket) {
+                // Do not send WebRTC signaling to the spy
+                continue;
+              }
               let msgToSend = message;
               if (room.type === 'spy' && (message.type === 'chat' || message.type === 'typing')) {
-                const senderId = socket === room.spySocket ? 'Spy' : (socket === room.sockets[1] ? 'Stranger 1' : 'Stranger 2');
+                let senderId;
+                if (socket === room.spySocket) {
+                  senderId = 'Spy';
+                } else if (socket === room.sockets[1]) {
+                  senderId = 'Stranger 1';
+                } else {
+                  senderId = 'Stranger 2';
+                }
                 msgToSend = { ...message, senderId };
               }
               sendJson(s, msgToSend);
@@ -283,6 +271,37 @@ export function attachWebSocketServer(server) {
           }
         }
       }
+    };
+
+    socket.on("message", (data) => {
+      if (!isAuthenticated) {
+        messageQueue.push(data);
+        return;
+      }
+      processMessage(data);
+    });
+
+    if (wsArcjet) {
+      try {
+        const ipSrc = req.headers["x-forwarded-for"]?.split(',')[0] || req.socket?.remoteAddress;
+        const decision = await wsArcjet.protect(req, { ipSrc });
+        if (decision.isDenied()) {
+          socket.close(1008, "Access denied");
+          return;
+        }
+        isAuthenticated = true;
+        messageQueue.forEach(msg => processMessage(msg));
+      } catch (e) {
+        socket.close(1011, "Server security error");
+        return;
+      }
+    }
+
+    socket.isAlive = true;
+    broadcastUserCount();
+
+    socket.on("pong", () => {
+      socket.isAlive = true;
     });
 
     socket.on("error", (error) => {
