@@ -48,7 +48,8 @@ export function securityMiddleware() {
     if (!httpArcjet) return next();
 
     try {
-      const decision = await httpArcjet.protect(req);
+      const ipSrc = req.ip || req.headers["x-forwarded-for"]?.split(',')[0] || req.socket?.remoteAddress;
+      const decision = await httpArcjet.protect(req, { ipSrc });
 
       if (decision.isDenied()) {
         if (decision.reason.isRateLimit()) {
