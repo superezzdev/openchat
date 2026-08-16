@@ -18,7 +18,7 @@ const server = http.createServer(app);
 
 app.use(helmet());
 const clientOrigin = process.env.CLIENT_ORIGIN || '*';
-const corsOrigin = clientOrigin === '*' ? '*' : clientOrigin.split(',').map(o => o.trim());
+const corsOrigin = clientOrigin === '*' ? '*' : clientOrigin.split(',').map(o => o.trim().replace(/\/$/, ''));
 
 app.use(cors({
   origin: corsOrigin

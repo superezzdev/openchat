@@ -10,10 +10,10 @@ export function attachWebSocketServer(server) {
     verifyClient: (info, cb) => {
       const origin = info.origin || info.req.headers.origin;
       const allowedOriginStr = process.env.CLIENT_ORIGIN || '*';
-      const allowedOrigins = allowedOriginStr === '*' ? ['*'] : allowedOriginStr.split(',').map(o => o.trim());
+      const allowedOrigins = allowedOriginStr === '*' ? ['*'] : allowedOriginStr.split(',').map(o => o.trim().replace(/\/$/, ''));
       
       if (!allowedOrigins.includes('*') && !allowedOrigins.includes(origin)) {
-        console.log(`[${new Date().toISOString()}] WebSocket connection rejected. Invalid origin: ${origin} (Expected: ${allowedOriginStr})`);
+        console.log(`[${new Date().toISOString()}] WebSocket connection rejected. Invalid origin: ${origin} (Expected: ${allowedOrigins.join(', ')})`);
         return cb(false, 401, "Unauthorized");
       }
       cb(true);
