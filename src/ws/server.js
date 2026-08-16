@@ -97,7 +97,8 @@ export function attachWebSocketServer(server) {
 
     if (wsArcjet) {
       try {
-        const decision = await wsArcjet.protect(req);
+        const ipSrc = req.headers["x-forwarded-for"]?.split(',')[0] || req.socket?.remoteAddress;
+        const decision = await wsArcjet.protect(req, { ipSrc });
         if (decision.isDenied()) {
           socket.close(1008, "Access denied");
           return;
