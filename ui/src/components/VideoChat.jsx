@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useVideoChat } from '../hooks/useVideoChat.js';
 import { Mic, MicOff, Video, VideoOff, SkipForward, LogOut, Flag, MessageCircle, X, Send } from 'lucide-react';
-
+import { useDraggable } from '../hooks/useDraggable.js';
 const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) => {
   const {
     localVideoRef, remoteVideoRef, messagesEndRef,
@@ -39,64 +39,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
   };
 
   // Draggable PiP
-  const localContainerRef = useRef(null);
-  const draggingRef = useRef(false);
-  const offsetRef = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const onMouseMove = (e) => {
-      if (!draggingRef.current || !localContainerRef.current) return;
-      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-      
-      if (clientX === undefined || clientY === undefined) return;
-      
-      const pipWidth = 96;
-      const pipHeight = 128;
-      
-      const maxX = window.innerWidth - pipWidth - 12;
-      const maxY = window.innerHeight - pipHeight - 12; 
-      
-      let newX = clientX - offsetRef.current.x;
-      let newY = clientY - offsetRef.current.y;
-      
-      newX = Math.max(12, Math.min(maxX, newX));
-      newY = Math.max(12, Math.min(maxY, newY));
-      
-      localContainerRef.current.style.right = 'auto';
-      localContainerRef.current.style.bottom = 'auto';
-      localContainerRef.current.style.left = `${newX}px`;
-      localContainerRef.current.style.top = `${newY}px`;
-      localContainerRef.current.style.transform = 'none';
-    };
-    
-    const onMouseUp = () => {
-      draggingRef.current = false;
-    };
-    
-    const onResize = () => {
-       if (window.innerWidth >= 768 && localContainerRef.current) {
-          localContainerRef.current.style.left = '';
-          localContainerRef.current.style.top = '';
-          localContainerRef.current.style.right = '';
-          localContainerRef.current.style.bottom = '';
-       }
-    };
-    
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-    document.addEventListener('touchmove', onMouseMove, { passive: false });
-    document.addEventListener('touchend', onMouseUp);
-    window.addEventListener('resize', onResize);
-    
-    return () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      document.removeEventListener('touchmove', onMouseMove);
-      document.removeEventListener('touchend', onMouseUp);
-      window.removeEventListener('resize', onResize);
-    };
-  }, []);
+  const { containerRef: localContainerRef, onMouseDown } = useDraggable();
 
   useEffect(() => {
     if (!window.visualViewport) return;
@@ -116,23 +59,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
   }, []);
 
 
-  const onMouseDown = (e) => {
-    if (window.innerWidth >= 768) return;
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-    
-    if (clientX === undefined || clientY === undefined) return;
-    if (e.type === 'mousedown' && e.button !== 0) return;
-    
-    if (localContainerRef.current) {
-      const rect = localContainerRef.current.getBoundingClientRect();
-      draggingRef.current = true;
-      offsetRef.current = {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    }
-  };
+
 
   const isConnected = status === 'connected';
   const isWaiting = status === 'idle' || status === 'searching' || status === 'waiting';
@@ -155,9 +82,9 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
       <style>
         {`
           @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(99,102,241,0); }
-            100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+            0% { box-shadow: 0 0 0 0 rgba(196,149,106,0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(196,149,106,0); }
+            100% { box-shadow: 0 0 0 0 rgba(196,149,106,0); }
           }
           .stop-btn {
             background: transparent;
@@ -172,15 +99,15 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
             transition: all 0.2s;
           }
           .stop-btn:hover {
-            border-color: #6366f1;
-            color: #6366f1;
+            border-color: #c4956a;
+            color: #c4956a;
           }
           .report-btn {
             margin-left: auto; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
           }
           .report-btn:hover {
-            background: #6366f1;
+            background: #c4956a;
           }
           .control-btn {
             width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.1); color: white; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -193,7 +120,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
             flex: 1; background: #1e293b; border: 1.5px solid transparent; border-radius: 24px; padding: 10px 16px; color: #f1f5f9; font-size: 15px; outline: none; transition: border-color 0.2s;
           }
           .chat-input:focus {
-            border-color: #6366f1 !important;
+            border-color: #c4956a !important;
           }
         `}
       </style>
@@ -226,8 +153,8 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
         {toastMessage && (
           <div style={{
             position: 'absolute', top: 72, left: '50%', transform: 'translateX(-50%)',
-            background: '#6366f1', color: 'white', padding: '8px 16px', borderRadius: 24,
-            boxShadow: '0 4px 12px rgba(99,102,241,0.4)', zIndex: 100,
+            background: '#c4956a', color: 'white', padding: '8px 16px', borderRadius: 24,
+            boxShadow: '0 4px 12px rgba(196,149,106,0.4)', zIndex: 100,
             display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 500,
             animation: 'slide-down 0.3s ease-out forwards'
           }}>
@@ -241,7 +168,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
         )}
 
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, padding: '12px 16px', background: 'linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 100%)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: 14 }}>S</div>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#c4956a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: 14 }}>S</div>
           <div style={{ color: '#f1f5f9', fontSize: 15, fontWeight: 500, fontFamily: "'Inter', system-ui, sans-serif" }}>Stranger</div>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', marginLeft: 4 }}></div>
           <button onClick={() => setShowReportModal(true)} className="report-btn">
@@ -259,7 +186,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
           <button onClick={onQuit} style={{ width: 52, height: 52, borderRadius: '50%', background: '#ef4444', border: 'none', color: 'white', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(239,68,68,0.4)' }}>
             <LogOut size={24} />
           </button>
-          <button onClick={findStranger} style={{ width: 52, height: 52, borderRadius: '50%', background: '#6366f1', border: 'none', color: '#0a0f1e', fontSize: 22, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}>
+          <button onClick={findStranger} style={{ width: 52, height: 52, borderRadius: '50%', background: '#c4956a', border: 'none', color: '#0a0f1e', fontSize: 22, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(196,149,106,0.4)' }}>
             <SkipForward size={24} />
           </button>
         </div>
@@ -268,7 +195,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
             <div style={{ background: '#1e293b', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
               <div style={{ color: '#f1f5f9', fontSize: 18, fontWeight: 600 }}>Stranger disconnected</div>
-              <button onClick={findStranger} style={{ height: 48, borderRadius: 24, background: '#6366f1', border: 'none', color: '#ffffff', padding: '0 32px', cursor: 'pointer', fontSize: 16, fontWeight: 600, boxShadow: '0 4px 14px rgba(99,102,241,0.4)' }}>Find new stranger</button>
+              <button onClick={findStranger} style={{ height: 48, borderRadius: 24, background: '#c4956a', border: 'none', color: '#ffffff', padding: '0 32px', cursor: 'pointer', fontSize: 16, fontWeight: 600, boxShadow: '0 4px 14px rgba(196,149,106,0.4)' }}>Find new stranger</button>
               <button onClick={onQuit} style={{ height: 48, borderRadius: 24, background: 'transparent', border: '1px solid #334155', color: '#94a3b8', padding: '0 32px', cursor: 'pointer', fontSize: 16, fontWeight: 500 }}>Go home</button>
             </div>
           </div>
@@ -277,10 +204,10 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
 
       {/* BOTTOM CHAT PANEL */}
       <div style={{ height: 280, flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', background: '#0d1117' }}>
-        <div style={{ height: 48, background: '#1e293b', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 10, borderLeft: '3px solid #6366f1' }}>
-          <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 600 }}>S</div>
+        <div style={{ height: 48, background: '#141210', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 10, borderLeft: '3px solid #c4956a' }}>
+          <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#c4956a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 600 }}>S</div>
           <div style={{ color: '#f1f5f9', fontSize: 15, fontWeight: 500 }}>Stranger</div>
-          <div style={{ marginLeft: 'auto', color: '#6366f1', fontSize: 13 }}>
+          <div style={{ marginLeft: 'auto', color: '#c4956a', fontSize: 13 }}>
             {isStrangerTyping ? 'typing…' : (isConnected ? 'connected' : '')}
           </div>
         </div>
@@ -302,12 +229,12 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
             return (
               <div key={idx} style={{ 
                 alignSelf: isMe ? 'flex-end' : 'flex-start',
-                background: isMe ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : '#1e293b',
+                background: isMe ? 'linear-gradient(135deg, #c4956a, #a87a52)' : '#1e293b',
                 color: isMe ? '#ffffff' : '#e2e8f0',
                 padding: '8px 12px',
                 borderRadius: isMe ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
                 border: isMe ? 'none' : '1px solid rgba(255,255,255,0.05)',
-                boxShadow: isMe ? '0 2px 8px rgba(99,102,241,0.3)' : 'none',
+                boxShadow: isMe ? '0 2px 8px rgba(196,149,106,0.3)' : 'none',
                 maxWidth: '75%',
                 fontSize: 14,
                 lineHeight: 1.4
@@ -332,7 +259,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
               disabled={!isConnected}
               className="chat-input"
             />
-            <button type="submit" disabled={!isConnected || !chatInput.trim()} style={{ width: 40, height: 40, borderRadius: '50%', background: (!isConnected || !chatInput.trim()) ? '#1e293b' : '#6366f1', border: 'none', color: (!isConnected || !chatInput.trim()) ? '#475569' : '#ffffff', fontSize: 18, cursor: 'pointer', flexShrink: 0, boxShadow: (!isConnected || !chatInput.trim()) ? 'none' : '0 2px 8px rgba(99,102,241,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type="submit" disabled={!isConnected || !chatInput.trim()} style={{ width: 40, height: 40, borderRadius: '50%', background: (!isConnected || !chatInput.trim()) ? '#1e293b' : '#c4956a', border: 'none', color: (!isConnected || !chatInput.trim()) ? '#475569' : '#ffffff', fontSize: 18, cursor: 'pointer', flexShrink: 0, boxShadow: (!isConnected || !chatInput.trim()) ? 'none' : '0 2px 8px rgba(196,149,106,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Send size={18} />
             </button>
           </form>
@@ -341,7 +268,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
 
       {isWaiting && (
         <div style={{ position: 'absolute', inset: 0, background: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ width: 64, height: 64, background: '#6366f1', borderRadius: '50%', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+          <div style={{ width: 64, height: 64, background: '#c4956a', borderRadius: '50%', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
           <div style={{ color: '#f1f5f9', fontFamily: "'Inter', system-ui, sans-serif", fontSize: 20, marginTop: 24 }}>Looking for a stranger…</div>
           <div style={{ color: '#64748b', fontSize: 14, marginTop: 8 }}>Searching for {waitSeconds}s…</div>
           <button onClick={onQuit} className="stop-btn">Stop</button>

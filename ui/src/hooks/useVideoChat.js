@@ -342,7 +342,21 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
    * Submits a report against the current peer.
    * @param {string} reason - The reason for the report
    */
-  const submitReport = (reason) => {
+  const submitReport = async (reason) => {
+    try {
+      await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reporterId: 'anonymous',
+          roomType: mode,
+          reason
+        })
+      });
+    } catch (e) {
+      console.error('Failed to submit report', e);
+    }
+
     if (socketRef.current && status === 'connected') {
       socketRef.current.send(JSON.stringify({ type: 'report', reason }));
     }

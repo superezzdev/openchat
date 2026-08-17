@@ -90,15 +90,21 @@ export function attachWebSocketServer(server) {
   }
 
   /**
-   * Broadcasts the current number of connected users to all clients.
+   * Broadcasts the current number of connected users to all clients (Throttled).
    */
+  let broadcastTimeout = null;
   function broadcastUserCount() {
-    const payload = JSON.stringify({ type: 'userCount', count: wss.clients.size });
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(payload);
-      }
-    });
+    if (!broadcastTimeout) {
+      broadcastTimeout = setTimeout(() => {
+        const payload = JSON.stringify({ type: 'userCount', count: wss.clients.size });
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(payload);
+          }
+        });
+        broadcastTimeout = null;
+      }, 3000);
+    }
   }
 
   /**
@@ -332,18 +338,26 @@ export function attachWebSocketServer(server) {
 
   const fallbackInterval = setInterval(() => {
     const now = Date.now();
-    const waitList = Array.from(waitingQueue).filter(w => w.socket.readyState === WebSocket.OPEN);
+    const waitList = Array.from(waitingQueue);
     
-    // Fallback (5 seconds): Ignore mode (allow mixed pairing) & tags
-    const longWaiters = waitList.filter(w => now - w.joinedAt > 5000);
-    for (const waiter of longWaiters) {
-      if (!waitingQueue.has(waiter)) continue; 
-      const other = Array.from(waitingQueue).find(w => w !== waiter && w.socket.readyState === WebSocket.OPEN);
-      if (other) {
+    let lastUnmatched = null;
+    for (const waiter of waitList) {
+      if (waiter.socket.readyState !== WebSocket.OPEN) {
         waitingQueue.delete(waiter);
-        waitingQueue.delete(other);
-        const commonInterests = waiter.tags.filter(t => other.tags.includes(t));
-        pairUp(waiter.socket, other.socket, commonInterests);
+        continue;
+      }
+      
+      // Fallback (5 seconds): Ignore mode & tags, just pair who's been waiting longest
+      if (now - waiter.joinedAt > 5000) {
+        if (lastUnmatched) {
+          waitingQueue.delete(waiter);
+          waitingQueue.delete(lastUnmatched);
+          const commonInterests = waiter.tags.filter(t => lastUnmatched.tags.includes(t));
+          pairUp(waiter.socket, lastUnmatched.socket, commonInterests);
+          lastUnmatched = null;
+        } else {
+          lastUnmatched = waiter;
+        }
       }
     }
   }, 1000);
