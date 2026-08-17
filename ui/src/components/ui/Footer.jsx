@@ -1,17 +1,14 @@
 import { Mail, Shield, FileText, Activity } from 'lucide-react';
+import randallLogoText from '../../assets/randall.png';
 
 export const Footer = () => (
   <footer className="w-full max-w-[900px] mx-auto mt-16 pt-10 border-t border-[#e5e7eb] flex flex-col gap-8 pb-4">
     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
       <div className="flex flex-col gap-4 col-span-2 md:col-span-1">
         <div className="flex items-center gap-2">
-           <div className="relative w-5 h-[14px] shrink-0">
-             <div className="absolute left-0 top-0 w-[14px] h-[14px] rounded-full bg-[#c4956a]"/>
-             <div className="absolute left-1.5 top-0 w-[14px] h-[14px] rounded-full bg-[#c4956a] opacity-40"/>
-           </div>
-           <span className="text-sm font-bold text-[#0a0908] tracking-[-0.4px]">openchat</span>
+           <img src={randallLogoText} alt="randall" className="h-[18px] opacity-80 mix-blend-multiply filter grayscale opacity-60" />
         </div>
-        <p className="text-[13px] text-[#6b7280] leading-relaxed">
+        <p className="text-[13px] text-[#6b7280] leading-relaxed mt-2">
           Meet someone new, right now. No accounts, no friction. Just real conversations.
         </p>
       </div>
@@ -67,7 +64,7 @@ export const Footer = () => (
 
         <div className="flex items-center gap-3">
           <span className="text-[11px] text-[#9ca3af] font-medium">
-            © {new Date().getFullYear()} OpenChat
+            © {new Date().getFullYear()} randall
           </span>
           <span className="w-1 h-1 rounded-full bg-[#d1d5db]"></span>
           <span className="text-[11px] text-[#9ca3af] font-mono tracking-wider">
