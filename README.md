@@ -1,5 +1,7 @@
 # Randall (OpenChat) 🎥
 
+![Randall Preview](.github/assets/rendallpreview.png)
+
 A fast, secure, and modern random video chat application where you can meet new people from around the world! Featuring a vibrant design, multiple chat modes, and robust security.
 
 ## Features
