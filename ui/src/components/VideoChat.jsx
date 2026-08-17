@@ -62,6 +62,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
   const isConnected = status === 'connected';
   const isWaiting = status === 'idle' || status === 'searching' || status === 'waiting';
   const isDisconnected = status === 'disconnected';
+  const isTextMode = mode === 'text';
 
   useEffect(() => {
     let interval;
@@ -76,88 +77,123 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
   }, [isWaiting]);
 
   return (
-    <div className="fixed inset-0 bg-[#003cff] flex flex-col font-['Inter',system-ui,sans-serif] overflow-hidden">
+    <div className={`fixed inset-0 ${isTextMode ? 'bg-white' : 'bg-[#003cff]'} flex flex-col font-['Inter',system-ui,sans-serif] overflow-hidden`}>
       
+      {isTextMode && (
+        <div className="h-[60px] shrink-0 border-b border-slate-100 flex items-center justify-between px-5 bg-white z-40">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#d8ff00] flex items-center justify-center text-[#003cff] font-extrabold text-sm">S</div>
+            <div className="text-slate-900 font-bold">Stranger</div>
+            {isConnected && <div className="w-2 h-2 rounded-full bg-[#4ade80] shadow-[0_0_8px_rgba(74,222,128,0.5)]"></div>}
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowReportModal(true)} className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-50 transition-colors">
+              <Flag size={18} />
+            </button>
+            <button onClick={onQuit} className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-50 transition-colors">
+              <LogOut size={18} />
+            </button>
+            <button onClick={findStranger} className="px-3 py-1.5 bg-[#d8ff00] text-[#003cff] font-bold rounded-full text-sm flex items-center gap-1.5 hover:bg-[#ccee00] transition-colors">
+              <SkipForward size={16} /> Skip
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Top panel */}
-      <div className="relative flex-1">
-        <video
-          id="remote-video"
-          ref={remoteVideoRef}
-          playsInline
-          autoPlay
-          className="absolute inset-0 w-full h-full object-cover bg-gray-900"
-        />
-        <div
-          id="local-video"
-          ref={localContainerRef}
-          onMouseDown={onMouseDown}
-          onTouchStart={onMouseDown}
-          className="absolute top-3 right-3 w-24 h-32 rounded-2xl border-[3px] border-[#d8ff00] z-10 cursor-grab overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
-        >
+      {!isTextMode && (
+        <div className="relative flex-1">
           <video
-            ref={localVideoRef}
+            id="remote-video"
+            ref={remoteVideoRef}
             playsInline
             autoPlay
-            muted
-            className="w-full h-full object-cover scale-x-[-1] bg-gray-900"
+            className="absolute inset-0 w-full h-full object-cover bg-gray-900"
           />
-        </div>
-
-        {toastMessage && (
-          <div className="absolute top-[72px] left-1/2 -translate-x-1/2 bg-[#d8ff00] text-[#003cff] px-4 py-2 rounded-full shadow-[0_4px_16px_rgba(216,255,0,0.3)] z-[100] flex items-center gap-2 text-sm font-bold animate-[slide-down_0.3s_ease-out_forwards]">
-            {toastMessage}
-            {commonInterests.length > 0 && commonInterests.map((interest, i) => (
-              <span key={i} className="bg-[#003cff] text-white px-2 py-0.5 rounded-full text-xs font-semibold">
-                {interest}
-              </span>
-            ))}
+          <div
+            id="local-video"
+            ref={localContainerRef}
+            onMouseDown={onMouseDown}
+            onTouchStart={onMouseDown}
+            className="absolute top-3 right-3 w-24 h-32 rounded-2xl border-[3px] border-[#d8ff00] z-10 cursor-grab overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+          >
+            <video
+              ref={localVideoRef}
+              playsInline
+              autoPlay
+              muted
+              className="w-full h-full object-cover scale-x-[-1] bg-gray-900"
+            />
           </div>
-        )}
 
-        <div className="absolute top-0 left-0 right-0 z-20 px-5 py-4 bg-gradient-to-b from-black/60 to-transparent flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-[#d8ff00] flex items-center justify-center text-[#003cff] font-extrabold text-base">S</div>
-          <div className="text-white text-base font-bold font-['Inter',system-ui,sans-serif] drop-shadow-md">Stranger</div>
-          <div className="w-2 h-2 rounded-full bg-[#4ade80] ml-1 shadow-[0_0_8px_#4ade80]"></div>
-          <button onClick={() => setShowReportModal(true)} className="ml-auto w-9 h-9 rounded-full bg-white/15 border-none text-white text-base cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-sm hover:bg-red-500 hover:scale-105">
-            <Flag size={18} />
-          </button>
+          <div className="absolute top-0 left-0 right-0 z-20 px-5 py-4 bg-gradient-to-b from-black/60 to-transparent flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-full bg-[#d8ff00] flex items-center justify-center text-[#003cff] font-extrabold text-base">S</div>
+            <div className="text-white text-base font-bold font-['Inter',system-ui,sans-serif] drop-shadow-md">Stranger</div>
+            {isConnected && <div className="w-2 h-2 rounded-full bg-[#4ade80] ml-1 shadow-[0_0_8px_#4ade80]"></div>}
+            <button onClick={() => setShowReportModal(true)} className="ml-auto w-9 h-9 rounded-full bg-white/15 border-none text-white text-base cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-sm hover:bg-red-500 hover:scale-105">
+              <Flag size={18} />
+            </button>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 z-20 p-4 pb-[max(24px,env(safe-area-inset-bottom))] bg-gradient-to-t from-black/70 to-transparent flex justify-center gap-5 items-center">
+            <button onClick={toggleAudio} className="w-14 h-14 rounded-full bg-white/20 border border-white/30 text-white text-[22px] cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-md hover:bg-white hover:text-[#003cff] hover:scale-105">
+              {!isAudioEnabled ? <MicOff size={24} /> : <Mic size={24} />}
+            </button>
+            <button onClick={toggleVideo} className="w-14 h-14 rounded-full bg-white/20 border border-white/30 text-white text-[22px] cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-md hover:bg-white hover:text-[#003cff] hover:scale-105">
+              {!isVideoEnabled ? <VideoOff size={24} /> : <Video size={24} />}
+            </button>
+            <button onClick={onQuit} className="w-14 h-14 rounded-full bg-red-500 border-none text-white text-[22px] cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(239,68,68,0.4)] transition-transform duration-200 hover:scale-105">
+              <LogOut size={24} />
+            </button>
+            <button onClick={findStranger} className="w-16 h-16 rounded-full bg-[#d8ff00] border-none text-[#003cff] text-[26px] font-bold cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(216,255,0,0.4)] transition-transform duration-200 hover:scale-105">
+              <SkipForward size={28} />
+            </button>
+          </div>
+
+          {isDisconnected && (
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-40 flex flex-col items-center justify-center gap-4">
+              <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 px-8 py-9 flex flex-col items-center gap-5 shadow-[0_24px_48px_rgba(0,0,0,0.2)]">
+                <div className="text-white text-xl font-extrabold">Stranger disconnected</div>
+                <button onClick={findStranger} className="h-[52px] rounded-full bg-[#d8ff00] border-none text-[#003cff] px-9 cursor-pointer text-base font-extrabold shadow-[0_8px_20px_rgba(216,255,0,0.3)] transition-transform duration-200 hover:scale-105">Find new stranger</button>
+                <button onClick={onQuit} className="h-[52px] rounded-full bg-transparent border-2 border-white/30 text-white px-9 cursor-pointer text-base font-semibold transition-all duration-200 hover:border-white hover:bg-white/10">Go home</button>
+              </div>
+            </div>
+          )}
         </div>
+      )}
 
-        <div className="absolute bottom-0 left-0 right-0 z-20 p-4 pb-[max(24px,env(safe-area-inset-bottom))] bg-gradient-to-t from-black/70 to-transparent flex justify-center gap-5 items-center">
-          <button onClick={toggleAudio} className="w-14 h-14 rounded-full bg-white/20 border border-white/30 text-white text-[22px] cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-md hover:bg-white hover:text-[#003cff] hover:scale-105">
-            {!isAudioEnabled ? <MicOff size={24} /> : <Mic size={24} />}
-          </button>
-          <button onClick={toggleVideo} className="w-14 h-14 rounded-full bg-white/20 border border-white/30 text-white text-[22px] cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-md hover:bg-white hover:text-[#003cff] hover:scale-105">
-            {!isVideoEnabled ? <VideoOff size={24} /> : <Video size={24} />}
-          </button>
-          <button onClick={onQuit} className="w-14 h-14 rounded-full bg-red-500 border-none text-white text-[22px] cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(239,68,68,0.4)] transition-transform duration-200 hover:scale-105">
-            <LogOut size={24} />
-          </button>
-          <button onClick={findStranger} className="w-16 h-16 rounded-full bg-[#d8ff00] border-none text-[#003cff] text-[26px] font-bold cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(216,255,0,0.4)] transition-transform duration-200 hover:scale-105">
-            <SkipForward size={28} />
-          </button>
+      {toastMessage && (
+        <div className={`absolute ${isTextMode ? 'top-20' : 'top-[72px]'} left-1/2 -translate-x-1/2 bg-[#d8ff00] text-[#003cff] px-4 py-2 rounded-full shadow-[0_4px_16px_rgba(216,255,0,0.3)] z-[100] flex items-center gap-2 text-sm font-bold animate-[slide-down_0.3s_ease-out_forwards] whitespace-nowrap`}>
+          {toastMessage}
+          {commonInterests.length > 0 && commonInterests.map((interest, i) => (
+            <span key={i} className="bg-[#003cff] text-white px-2 py-0.5 rounded-full text-xs font-semibold">
+              {interest}
+            </span>
+          ))}
         </div>
+      )}
 
-        {isDisconnected && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-40 flex flex-col items-center justify-center gap-4">
-            <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 px-8 py-9 flex flex-col items-center gap-5 shadow-[0_24px_48px_rgba(0,0,0,0.2)]">
-              <div className="text-white text-xl font-extrabold">Stranger disconnected</div>
-              <button onClick={findStranger} className="h-[52px] rounded-full bg-[#d8ff00] border-none text-[#003cff] px-9 cursor-pointer text-base font-extrabold shadow-[0_8px_20px_rgba(216,255,0,0.3)] transition-transform duration-200 hover:scale-105">Find new stranger</button>
-              <button onClick={onQuit} className="h-[52px] rounded-full bg-transparent border-2 border-white/30 text-white px-9 cursor-pointer text-base font-semibold transition-all duration-200 hover:border-white hover:bg-white/10">Go home</button>
+      {isTextMode && isDisconnected && (
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
+          <div className="bg-white rounded-3xl p-8 flex flex-col items-center gap-5 shadow-[0_24px_48px_rgba(0,0,0,0.1)]">
+            <div className="text-slate-900 text-xl font-extrabold">Stranger disconnected</div>
+            <button onClick={findStranger} className="h-[52px] rounded-full bg-[#d8ff00] border-none text-[#003cff] px-9 cursor-pointer text-base font-extrabold shadow-md transition-transform hover:scale-105">Find new stranger</button>
+            <button onClick={onQuit} className="h-[52px] rounded-full bg-slate-100 border-none text-slate-700 px-9 cursor-pointer text-base font-semibold transition-all duration-200 hover:bg-slate-200">Go home</button>
+          </div>
+        </div>
+      )}
+
+      {/* BOTTOM CHAT PANEL */}
+      <div className={`${isTextMode ? 'flex-1' : 'h-[280px] shrink-0 -mt-5 rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.2)]'} flex flex-col bg-white z-30 relative`}>
+        {!isTextMode && (
+          <div className="h-[60px] px-5 flex items-center gap-3 border-b border-slate-100">
+            <div className="w-8 h-8 rounded-full bg-[#d8ff00] flex items-center justify-center text-[#003cff] text-sm font-extrabold">S</div>
+            <div className="text-slate-900 text-base font-bold">Stranger</div>
+            <div className="ml-auto text-[#003cff] text-sm font-semibold">
+              {isStrangerTyping ? 'typing…' : (isConnected ? 'connected' : '')}
             </div>
           </div>
         )}
-      </div>
-
-      {/* BOTTOM CHAT PANEL */}
-      <div className="h-[280px] shrink-0 flex flex-col bg-white rounded-t-[32px] -mt-5 z-30 relative shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
-        <div className="h-[60px] px-5 flex items-center gap-3 border-b border-slate-100">
-          <div className="w-8 h-8 rounded-full bg-[#d8ff00] flex items-center justify-center text-[#003cff] text-sm font-extrabold">S</div>
-          <div className="text-slate-900 text-base font-bold">Stranger</div>
-          <div className="ml-auto text-[#003cff] text-sm font-semibold">
-            {isStrangerTyping ? 'typing…' : (isConnected ? 'connected' : '')}
-          </div>
-        </div>
         
         <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3">
           {messages.map((msg, idx) => {
@@ -183,6 +219,9 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
             );
           })}
           <div ref={messagesEndRef} />
+          {isTextMode && isStrangerTyping && (
+             <div className="text-xs text-slate-400 font-semibold italic self-start px-2">Stranger is typing…</div>
+          )}
         </div>
         
         <div className="bg-white border-t border-slate-100 pb-[env(safe-area-inset-bottom)] flex items-center px-4 py-3">
@@ -203,13 +242,13 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
       </div>
 
       {isWaiting && (
-        <div className="absolute inset-0 bg-[#003cff]/95 backdrop-blur-md flex flex-col items-center justify-center z-50">
+        <div className="absolute inset-0 bg-[#003cff] flex flex-col items-center justify-center z-[60]">
           <div className="w-20 h-20 bg-[#d8ff00] rounded-full animate-[pulse-g_1.5s_infinite_ease-in-out] flex items-center justify-center shadow-[0_0_0_0_rgba(216,255,0,0.5)]">
-            <Search size={32} color="#003cff" />
+            <Search size={32} color="#003cff" strokeWidth={2.5} />
           </div>
-          <div className="text-white font-['Inter',system-ui,sans-serif] text-2xl font-extrabold mt-8">Looking for a stranger…</div>
-          <div className="text-white/70 text-[15px] font-semibold mt-2">Searching for {waitSeconds}s…</div>
-          <button onClick={onQuit} className="bg-transparent border-2 border-white/30 text-white rounded-full px-8 py-2.5 text-[15px] font-bold mt-8 cursor-pointer transition-all duration-200 hover:border-[#d8ff00] hover:text-[#d8ff00] hover:bg-[#d8ff00]/10">Stop Search</button>
+          <div className="text-white font-['Inter',system-ui,sans-serif] text-2xl font-bold mt-8">Looking for a stranger...</div>
+          <div className="text-white/80 text-[15px] font-medium mt-2">Searching for {waitSeconds}s...</div>
+          <button onClick={onQuit} className="bg-transparent border border-[#3b82f6] text-white hover:bg-white/5 rounded-full px-8 py-2.5 text-[15px] font-bold mt-10 cursor-pointer transition-all duration-200">Stop Search</button>
         </div>
       )}
 
