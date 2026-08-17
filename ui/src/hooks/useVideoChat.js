@@ -127,7 +127,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
           break;
         case 'chat':
           setIsStrangerTyping(false);
-          setMessages(prev => [...prev, { text: message.text, isSent: false, senderId: message.senderId }]);
+          setMessages(prev => [...prev, { text: message.text, isSent: false, sender: 'stranger', senderId: message.senderId }]);
           break;
         case 'typing': setIsStrangerTyping(message.isTyping); break;
         case 'userCount': setUserCount(message.count); break;
@@ -139,13 +139,6 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   /**
    * Sets up the WebRTC Peer Connection for P2P video/audio.
    * @param {boolean} isInitiator - Whether this client should create the offer
-   * 
-   * WHAT ICE servers are: They help browsers find each other across the internet, bypassing firewalls and NATs.
-   * WHAT STUN does: It simply tells the browser "here is your public IP address" so it can share it with the peer.
-   * 
-   * WHY do we call createOffer only on one side?
-   * WebRTC requires an asymmetric handshake. One side (the offerer) proposes a connection, 
-   * and the other side (the answerer) accepts it. If both tried to offer, they would conflict.
    */
   const setupPeerConnection = async (isInitiator) => {
     peerConnectionRef.current = new RTCPeerConnection({ iceServers: iceServersRef.current });
@@ -199,8 +192,6 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   /**
    * Handles an incoming WebRTC offer from the initiator.
    * @param {Object} message - The message containing the offer
-   * 
-   * WHAT SDP is: SDP (Session Description Protocol) is a text string describing the media formats (like H.264 video) and connection info the browser supports.
    */
   const handleOffer = async (message) => {
     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(message.offer));
@@ -234,9 +225,6 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
   /**
    * Handles incoming ICE candidates from the peer.
    * @param {Object} message - The message containing the ICE candidate
-   * 
-   * WHAT ICE candidates are: They are potential network paths (IP addresses/ports) to reach the peer.
-   * WHY there are multiple: A device might have multiple IPs (Wi-Fi, Cellular, VPN), and ICE tries them all to find the best route.
    */
   const handleIceCandidate = async (message) => {
     try {
@@ -329,7 +317,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
     if (e) e.preventDefault();
     if (!chatInput.trim() || status !== 'connected') return;
     socketRef.current.send(JSON.stringify({ type: 'chat', text: chatInput }));
-    setMessages(prev => [...prev, { text: chatInput, isSent: true }]);
+    setMessages(prev => [...prev, { text: chatInput, isSent: true, sender: 'me' }]);
     setChatInput("");
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
