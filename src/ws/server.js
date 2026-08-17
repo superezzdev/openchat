@@ -1,6 +1,7 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { wsArcjet } from "../arcjet.js";
 import crypto from "crypto";
+import { z } from "zod";
 
 /**
  * Attaches the WebSocket server to the HTTP server and handles signaling.
@@ -39,9 +40,6 @@ export function attachWebSocketServer(server) {
    * @param {WebSocket} socket1 - The first user's socket
    * @param {WebSocket} socket2 - The second user's socket
    * @param {Array} commonInterests - Tags they both share
-   * 
-   * WHY we notify both: WebRTC needs one side to create an "offer" and the other to "answer".
-   * We assign the 'initiator' role to one of them, so they know who should start the WebRTC handshake.
    */
   function pairUp(socket1, socket2, commonInterests) {
     const room = { sockets: [socket1, socket2], type: 'normal' };
@@ -110,11 +108,6 @@ export function attachWebSocketServer(server) {
   /**
    * Cleans up when a user disconnects.
    * @param {WebSocket} socket - The socket that disconnected
-   * 
-   * WHY notify the peer: The other user needs to know their partner left so they can 
-   * reset their UI and find a new stranger, instead of staring at a frozen video.
-   * We also remove the disconnected socket from the waiting room so we don't try 
-   * to match someone with a dead connection.
    */
   function handleDisconnect(socket) {
     console.log(`[${new Date().toISOString()}] WebSocket disconnected: ${socket.id}`);
@@ -150,12 +143,35 @@ export function attachWebSocketServer(server) {
     const messageQueue = [];
 
     const processMessage = (data) => {
-      let message;
+      let rawMessage;
       try {
-        message = JSON.parse(data.toString());
+        rawMessage = JSON.parse(data.toString());
       } catch {
+        return; // Ignore malformed JSON
+      }
+
+      // Basic Zod schema for incoming messages to prevent payload bloat/injection
+      const messageSchema = z.object({
+        type: z.enum(['join', 'leave', 'report', 'mediaState', 'chat', 'typing', 'offer', 'answer', 'ice-candidate', 'sys_ping']),
+        tags: z.array(z.string().max(50)).max(10).optional(),
+        mode: z.enum(['video', 'text', 'spy']).optional(),
+        question: z.string().max(500).optional(),
+        reason: z.string().max(1000).optional(),
+        videoEnabled: z.boolean().optional(),
+        audioEnabled: z.boolean().optional(),
+        text: z.string().max(2000).optional(),
+        isTyping: z.boolean().optional(),
+        offer: z.any().optional(),
+        answer: z.any().optional(),
+        candidate: z.any().optional()
+      });
+
+      const parseResult = messageSchema.safeParse(rawMessage);
+      if (!parseResult.success) {
+        console.warn(`[${new Date().toISOString()}] Invalid message payload from ${socket.id}`, parseResult.error.issues);
         return;
       }
+      const message = parseResult.data;
 
       if (message.type === "join") {
         if (rooms.has(socket)) return;
