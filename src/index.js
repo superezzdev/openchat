@@ -42,6 +42,9 @@ const shutdown = () => {
   // Forcibly close all active WebSocket clients so wss.close() doesn't hang
   if (wss.clients) {
     for (const client of wss.clients) {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify({ type: 'server_shutdown' }));
+      }
       client.terminate();
     }
   }

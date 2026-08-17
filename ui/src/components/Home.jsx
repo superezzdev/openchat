@@ -1,302 +1,254 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { ArrowLeft } from './ui/ArrowLeft';
+import { ArrowRight } from './ui/ArrowRight';
+import { CircularBadge } from './ui/CircularBadge';
+import { FloatingCard } from './ui/FloatingCard';
+import { Footer } from './ui/Footer';
 
-const Home = ({ onStart, onlineCount = 0 }) => {
-  const [tags, setTags] = useState([]);
-  const [inputValue, setInputValue] = useState('');
-  const [mode, setMode] = useState('video'); // video, text, spy
-  const [showRules, setShowRules] = useState(false);
-  const [isStartHovered, setIsStartHovered] = useState(false);
-  const [isStartPressed, setIsStartPressed] = useState(false);
+export default function Home({ onStart, onlineCount = 0 }) {
+  const [mode, setMode] = useState('video');
+  const [interests, setInterests] = useState([]);
+  const [inputVal, setInputVal] = useState('');
+  const [shareToast, setShareToast] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
+  const handleInputKey = (e) => {
+    if ((e.key === 'Enter' || e.key === ',') && inputVal.trim()) {
       e.preventDefault();
-      const val = inputValue.trim().replace(/,$/, '');
-      if (val && !tags.includes(val) && tags.length < 10) {
-        setTags([...tags, val]);
+      if (interests.length < 10) {
+        setInterests([...interests, inputVal.trim().replace(/,$/, '')]);
+        setInputVal('');
       }
-      setInputValue('');
     }
   };
 
-  const removeTag = (tagToRemove) => {
-    setTags(tags.filter(t => t !== tagToRemove));
+  const removeTag = (i) => setInterests(interests.filter((_,idx)=>idx!==i));
+
+  const handleShare = async () => {
+    const data = { title:'randall', text:'Meet someone new, right now.', url:window.location.origin };
+    try {
+      if (navigator.share && navigator.canShare?.(data)) await navigator.share(data);
+      else { await navigator.clipboard.writeText(window.location.origin); setShareToast(true); setTimeout(()=>setShareToast(false),2000); }
+    } catch {}
   };
 
+  const handleStart = () => onStart?.({ mode, interests });
+
+  const typeShadowClass = "[text-shadow:1px_1px_0_#0026a3,2px_2px_0_#0026a3,3px_3px_0_#0026a3,4px_4px_0_#0026a3,5px_5px_0_#0026a3,6px_6px_0_#0026a3,7px_7px_0_#0026a3,8px_8px_0_#0026a3,9px_9px_0_#0026a3,10px_10px_0_#0026a3,11px_11px_0_#0026a3,12px_12px_0_#0026a3]";
+
   return (
-    <>
-      <style>
-        {`
-          @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
-            100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
-          }
-        `}
-      </style>
-      <div style={{
-        minHeight: '100dvh',
-        background: '#eef0f5',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: "'Inter', system-ui, sans-serif",
-        WebkitFontSmoothing: 'antialiased'
-      }}>
-        {/* TOP NAVBAR */}
-        <div style={{
-          position: 'sticky', top: 0, zIndex: 50,
-          background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid #e2e8f0', padding: '0 24px', height: 56,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          maxWidth: '100%'
-        }}>
-          {/* LEFT SIDE */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="32" height="22" viewBox="0 0 32 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="11" cy="11" r="11" fill="#0f172a"/>
-              <circle cx="21" cy="11" r="11" fill="#0f172a" opacity="0.55"/>
-            </svg>
-            <span style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>
-              randall
-            </span>
+    <div className="min-h-[100dvh] bg-[#003cff] flex flex-col font-['Inter',system-ui,sans-serif] antialiased relative overflow-x-hidden">
+      
+      {/* Background grid */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:4rem_4rem]"/>
+
+      {/* Toast */}
+      {shareToast && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-[#d8ff00] text-[#003cff] px-[22px] py-[10px] rounded-full text-[13px] font-bold z-[9999] shadow-[0_4px_20px_rgba(216,255,0,0.5)] whitespace-nowrap animate-[toast-in_0.2s_ease]">
+          Link copied!
+        </div>
+      )}
+
+      {/* ── NAVBAR ── */}
+      <nav className="relative z-20 flex items-center justify-between px-4 sm:px-6 md:px-8 py-4 md:py-5 max-w-[1440px] mx-auto w-full border-b border-white/10">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <div className="relative w-[24px] h-[16px] md:w-[26px] md:h-[18px] shrink-0">
+            <div className="absolute left-0 top-0 w-[16px] h-[16px] md:w-[18px] md:h-[18px] rounded-full bg-white"/>
+            <div className="absolute left-2 top-0 w-[16px] h-[16px] md:w-[18px] md:h-[18px] rounded-full bg-white opacity-40"/>
+          </div>
+          <span className="text-sm md:text-base font-black text-white tracking-[-0.4px]">randall</span>
+        </div>
+
+        {/* Nav links */}
+        <div className="hidden md:flex gap-4">
+          {[
+            {label:'How it works',href:'#'},
+            {label:'Open source',href:'https://github.com/superezzdev/openchat'},
+          ].map(l=>(
+            <a key={l.label} href={l.href} target="_blank" rel="noreferrer" 
+              className="px-[18px] py-[8px] rounded-full border border-white/30 text-white text-[13px] font-bold no-underline transition-colors hover:bg-white/10 hover:border-white whitespace-nowrap">
+              {l.label}
+            </a>
+          ))}
+        </div>
+
+        {/* Right side pills */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-[6px] text-white/80 text-[13px] font-bold bg-white/10 border border-white/20 rounded-full px-[14px] py-[6px]">
+            <div className="w-[8px] h-[8px] rounded-full bg-[#4ade80] animate-[pulse-g_2s_infinite]"/>
+            {onlineCount} online
           </div>
           
-          {/* RIGHT SIDE */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20,
-              padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6
-            }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: '50%', background: '#22c55e',
-                boxShadow: '0 0 0 0 rgba(34,197,94,0.4)',
-                animation: 'pulse-ring 2s infinite'
-              }} />
-              <span style={{ fontSize: 13, fontWeight: 500, color: '#16a34a' }}>
-                {onlineCount} online
-              </span>
-            </div>
+          <a href="https://github.com/superezzdev/openchat" target="_blank" rel="noreferrer" 
+             className="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-white border border-white/20">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.113.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+          
+          <button onClick={handleShare} className="hidden md:flex items-center gap-[5px] bg-[#d8ff00] hover:bg-[#ccee00] text-[#003cff] rounded-full px-5 py-2.5 text-[13px] font-bold cursor-pointer transition-colors shadow-sm">
+            ↑ Share
+          </button>
+        </div>
+      </nav>
+
+      {/* ── HERO ── */}
+      <main className="flex-1 relative z-10 px-4 pt-10 pb-[100px] md:pb-[160px] flex flex-col items-center justify-center max-w-[1440px] mx-auto w-full min-h-[clamp(300px,60vw,600px)]">
+        <div className="relative w-full max-w-[1000px] flex flex-col items-center">
+          
+          {/* ── STACKED GIANT TYPE ── */}
+          <div className="w-full flex flex-col gap-0 md:gap-2 relative z-50 md:z-10 mt-8 md:mt-0">
+            <motion.div 
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="w-full flex justify-center md:justify-start md:pl-[15%] relative z-[3]">
+              <h1 className={`font-['Inter',system-ui,sans-serif] text-[clamp(3.5rem,11vw,160px)] font-black leading-[0.9] tracking-[-0.04em] text-[#d8ff00] uppercase m-0 p-0 ${typeShadowClass}`}>
+                MEET
+              </h1>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+              className="w-full flex justify-center md:justify-start md:pl-[clamp(8px,2vw,20px)] relative z-[2]">
+              <h1 className={`font-['Inter',system-ui,sans-serif] text-[clamp(3.8rem,13vw,180px)] font-black leading-[0.9] tracking-[-0.04em] text-white uppercase m-0 p-0 overflow-visible whitespace-nowrap ${typeShadowClass}`}>
+                SOMEONE
+              </h1>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+              className="w-full flex justify-center md:justify-start md:pl-[25%] relative z-[1]">
+              <h1 className={`font-['Inter',system-ui,sans-serif] text-[clamp(3.5rem,11vw,160px)] font-black leading-[0.9] tracking-[-0.04em] text-[#d8ff00] italic uppercase m-0 p-0 ${typeShadowClass}`}>
+                NEW
+              </h1>
+            </motion.div>
             
-            <a href="https://github.com/superezzdev/openchat" target="_blank" rel="noreferrer" style={{
-              background: 'white', border: '1px solid #e2e8f0', borderRadius: 20,
-              padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 6,
-              fontSize: 13, fontWeight: 500, color: '#0f172a', textDecoration: 'none',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.06)'
-            }}>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-              </svg>
-              GitHub
-            </a>
+            <p className="text-[12px] sm:text-[14px] text-white/50 tracking-[0.08em] uppercase text-center md:text-left md:pl-[15%] mt-6 md:mt-4 font-bold drop-shadow-md">
+              One click · A real person · No accounts
+            </p>
+          </div>
+
+          {/* ── FLOATING CARDS + DECORATIONS ── */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none">
+            
+            {/* Card 1 */}
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1, y: [0, -15, 0] }}
+              transition={{ scale: { duration: 0.5, delay: 0.3 }, y: { duration: 5, repeat: Infinity, ease: 'easeInOut' } }}
+              className="absolute top-[0%] left-[-2%] md:bottom-[-5%] md:top-auto md:left-[2%] z-30 pointer-events-auto">
+              <FloatingCard
+                name="Alex, 24" country="Brazil" flag="🇧🇷"
+                seed="Felix" rotateClass="rotate-[-8deg]"/>
+            </motion.div>
+
+            {/* Card 2 */}
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1, y: [0, -20, 0] }}
+              transition={{ scale: { duration: 0.5, delay: 0.4 }, y: { duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 } }}
+              className="absolute bottom-[10%] right-[0%] md:top-[10%] md:bottom-auto md:right-[5%] z-30 pointer-events-auto">
+              <FloatingCard
+                name="Maya, 21" country="Japan" flag="🇯🇵"
+                seed="Maya" rotateClass="rotate-12"/>
+            </motion.div>
+
+            {/* Arrow decorations */}
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+              className="absolute bottom-[2%] left-[2%] w-12 h-12 md:w-28 md:h-28 md:bottom-[10%] md:left-[-5%] z-20">
+              <ArrowLeft/>
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
+              className="absolute top-[10%] right-[0%] w-10 h-10 md:w-20 md:h-20 md:top-[10%] md:right-[5%] z-20">
+              <ArrowRight/>
+            </motion.div>
+
+            {/* Spinning badge */}
+            <motion.div 
+              initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.5, delay: 0.8 }}
+              className="absolute bottom-[-15%] right-[5%] md:bottom-[-5%] md:right-[15%] z-40 pointer-events-auto transform scale-75 md:scale-100">
+              <CircularBadge onClick={handleStart}/>
+            </motion.div>
           </div>
         </div>
+      </main>
 
-        {/* HERO SECTION */}
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', padding: '48px 20px 32px',
-          textAlign: 'center'
-        }}>
-          <h1 style={{ margin: 0 }}>
-            <span style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 800, color: '#0f172a', letterSpacing: '-1.5px', lineHeight: 1.1, display: 'block' }}>Meet someone</span>
-            <span style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 800, color: '#6366f1', letterSpacing: '-1.5px', lineHeight: 1.1, display: 'block' }}>new, right now</span>
-          </h1>
-          <p style={{ fontSize: 'clamp(15px, 2vw, 18px)', color: '#64748b', marginTop: 16, maxWidth: 420, marginBottom: 0 }}>
-            One click. A real person. No accounts, no history.
-          </p>
-
-          {/* MAIN CARD */}
-          <div style={{
-            background: '#ffffff', borderRadius: 24,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.08)',
-            padding: '32px', width: '100%', maxWidth: 620, marginTop: 32,
-            display: 'flex', flexDirection: 'column', gap: 24, boxSizing: 'border-box'
-          }}>
+      {/* ── BOTTOM WHITE SECTION ── */}
+      <section className="bg-white text-[#0a0908] rounded-t-[40px] px-6 py-12 md:p-12 relative z-20 shadow-[0_-20px_60px_rgba(0,0,0,0.2)] mt-auto w-full">
+        <div className="max-w-[560px] mx-auto flex flex-col gap-5">
+          
+          <div className="text-center">
+            <p className="text-[12px] font-black tracking-[0.1em] text-[#003cff] uppercase mb-3">
+              Your interests (optional)
+            </p>
             
-            {/* A) INTERESTS INPUT */}
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: '#94a3b8', marginBottom: 8 }}>
-                YOUR INTERESTS (OPTIONAL)
+            {interests.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2.5 justify-center">
+                {interests.map((t,i)=>(
+                  <span key={i} className="bg-[#003cff]/10 border border-[#003cff]/20 rounded-full px-2.5 py-1 text-xs text-[#003cff] font-bold flex items-center gap-1.5">
+                    {t}
+                    <button onClick={()=>removeTag(i)} className="bg-transparent border-none cursor-pointer text-[#003cff] text-sm p-0 leading-none hover:opacity-70">×</button>
+                  </span>
+                ))}
               </div>
-              
-              {tags.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                  {tags.map(tag => (
-                    <div key={tag} style={{
-                      background: '#eef2ff', borderRadius: 20,
-                      padding: '4px 10px', fontSize: 13, color: '#6366f1', fontWeight: 500,
-                      display: 'flex', alignItems: 'center', gap: 5
-                    }}>
-                      {tag}
-                      <button
-                        onClick={() => removeTag(tag)}
-                        style={{
-                          background: 'none', border: 'none', color: '#6366f1',
-                          cursor: 'pointer', fontSize: 14, padding: 0, lineHeight: 1
-                        }}
-                      >&times;</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="music, gaming, art, coding…"
-                style={{
-                  width: '100%', background: '#f1f5f9', border: '1.5px solid transparent',
-                  borderRadius: 14, padding: '14px 18px', fontSize: 15, color: '#0f172a',
-                  outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                onBlur={(e) => e.target.style.borderColor = 'transparent'}
-              />
-            </div>
+            )}
+            
+            <input
+              value={inputVal}
+              onChange={e=>setInputVal(e.target.value)}
+              onKeyDown={handleInputKey}
+              placeholder="music, gaming, art…"
+              className="w-full bg-[#f4f6f8] border-2 border-[#e2e8f0] rounded-xl px-4 py-4 text-base text-[#0f172a] font-semibold outline-none transition-colors focus:border-[#003cff] focus:bg-white"
+            />
+          </div>
 
-            {/* B) MODE SELECTOR */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-              {[
-                {
-                  id: 'video', label: 'Video + chat', icon: (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                      <line x1="8" y1="21" x2="16" y2="21"></line>
-                      <line x1="12" y1="17" x2="12" y2="21"></line>
-                      <polygon points="10 7 15 10 10 13 10 7" fill="currentColor"></polygon>
-                    </svg>
-                  )
-                },
-                {
-                  id: 'text', label: 'Text only', icon: (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                      <line x1="9" y1="10" x2="15" y2="10"></line>
-                      <line x1="9" y1="14" x2="15" y2="14"></line>
-                    </svg>
-                  )
-                },
-                {
-                  id: 'spy', label: 'Spy mode', icon: (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  )
-                }
-              ].map(m => (
-                <div
-                  key={m.id}
-                  onClick={() => setMode(m.id)}
-                  style={{
-                    background: mode === m.id ? '#0f172a' : '#f8fafc',
-                    border: '1.5px solid',
-                    borderColor: mode === m.id ? '#0f172a' : '#e2e8f0',
-                    color: mode === m.id ? 'white' : '#0f172a',
-                    borderRadius: 16, padding: '20px 12px', cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                    transition: 'all 0.18s ease'
-                  }}
-                >
-                  <div style={{ color: mode === m.id ? 'white' : '#64748b' }}>
-                    {m.icon}
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{m.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* C) START BUTTON */}
-            <button
-              onClick={() => onStart(tags, mode, '')}
-              onMouseEnter={() => setIsStartHovered(true)}
-              onMouseLeave={() => { setIsStartHovered(false); setIsStartPressed(false); }}
-              onMouseDown={() => setIsStartPressed(true)}
-              onMouseUp={() => setIsStartPressed(false)}
-              style={{
-                width: '100%', height: 56, borderRadius: 16, border: 'none',
-                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                color: 'white', fontSize: 16, fontWeight: 700, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: isStartHovered ? '0 6px 20px rgba(99,102,241,0.5)' : '0 4px 14px rgba(99,102,241,0.4)',
-                transform: isStartPressed ? 'scale(0.98)' : (isStartHovered ? 'translateY(-1px)' : 'none'),
-                transition: 'transform 0.15s, box-shadow 0.15s'
-              }}
-            >
-              Start chatting
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-
-            {/* D) RULE PILLS & TOGGLE */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-              <button 
-                onClick={() => setShowRules(!showRules)}
-                style={{
-                  background: 'none', border: 'none', fontSize: 12, color: '#64748b', cursor: 'pointer', padding: 0
-                }}
-              >
-                By continuing you agree to our rules {showRules ? '▲' : '▼'}
+          {/* Mode tabs */}
+          <div className="flex bg-[#f1f5f9] rounded-xl p-1.5 border border-[#e2e8f0]">
+            {[
+              {id:'video',label:'📹 Video + chat'},
+              {id:'text', label:'💬 Text only'},
+              {id:'spy',  label:'👁 Spy mode'},
+            ].map(m=>(
+              <button key={m.id} onClick={()=>setMode(m.id)} 
+                className={`flex-1 py-[10px] px-1.5 rounded-lg border-none text-[13px] cursor-pointer font-[inherit] transition-all duration-150 ${mode === m.id ? 'font-bold bg-white text-[#003cff] shadow-sm' : 'font-semibold bg-transparent text-[#64748b] hover:text-[#0f172a]'}`}>
+                {m.label}
               </button>
-              
-              {showRules && (
-                <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8 }}>
-                  {["Be kind", "18+ only", "No nudity", "No harassment"].map(rule => (
-                    <div key={rule} style={{
-                      background: '#f8fafc', border: '1px solid #e2e8f0',
-                      borderRadius: 20, padding: '5px 14px', fontSize: 12,
-                      fontWeight: 500, color: '#64748b'
-                    }}>
-                      {rule}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
+          </div>
 
+          {/* Start button */}
+          <button
+            onClick={handleStart}
+            onMouseDown={()=>setPressed(true)}
+            onMouseUp={()=>setPressed(false)}
+            onMouseLeave={()=>setPressed(false)}
+            className={`w-full h-[60px] bg-[#d8ff00] hover:bg-[#ccee00] border-2 border-transparent hover:border-[#003cff] rounded-2xl flex items-center justify-between pl-6 pr-2.5 cursor-pointer font-[inherit] transition-all duration-150 shadow-[0_8px_24px_rgba(216,255,0,0.3)] ${pressed ? 'scale-[0.98]' : 'scale-100'}`}>
+            <span className="text-lg font-black text-[#003cff] uppercase tracking-wide">Start chatting</span>
+            <div className="w-[46px] h-[46px] rounded-full bg-[#003cff] flex items-center justify-center text-xl text-white shadow-inner">→</div>
+          </button>
+
+          {/* Rules */}
+          <div className="flex justify-center flex-wrap text-[11px] text-[#9ca3af]">
+            {['Be kind','18+ only','No nudity','No harassment'].map((r,i,a)=>(
+              <span key={r}>
+                {r}{i<a.length-1 && <span className="mx-1.5 opacity-50">·</span>}
+              </span>
+            ))}
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div style={{
-          padding: '24px', display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', flexWrap: 'wrap', gap: 12,
-          borderTop: '1px solid #e2e8f0', marginTop: 'auto',
-          fontSize: 13, color: '#94a3b8'
-        }}>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <a href="https://github.com/superezzdev/" target="_blank" rel="noreferrer" style={{
-              color: '#64748b', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5,
-              transition: 'color 0.2s'
-            }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-              </svg>
-              @superezzdev
-            </a>
-            <a href="https://www.superezz.dev/" target="_blank" rel="noreferrer" style={{
-              color: '#64748b', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5,
-              transition: 'color 0.2s'
-            }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-              superezz.dev
-            </a>
-          </div>
-          <div>
-            Built with &hearts; &middot; Open source
-          </div>
-        </div>
-      </div>
-    </>
+        {/* Footer */}
+        <Footer />
+      </section>
+    </div>
   );
-};
-
-export default Home;
+}

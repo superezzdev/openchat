@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
+@import "tailwindcss";
 :root {
   font-size: 16px;
   
@@ -72,7 +72,8 @@ html, body {
 html, body, #root, .app-wrapper {
   height: 100dvh;
   width: 100vw;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: none;
 }
 

@@ -31,7 +31,7 @@ function App() {
     };
   }, [isChatting]);
 
-  const handleStart = (tags, selectedMode, userQuestion = "") => {
+  const handleStart = ({ interests: tags, mode: selectedMode, question: userQuestion = "" }) => {
     setInterests(tags);
     setMode(selectedMode);
     setQuestion(userQuestion);
@@ -43,7 +43,7 @@ function App() {
       {isChatting ? (
         <VideoChat interests={interests} mode={mode} question={question} onQuit={() => setIsChatting(false)} />
       ) : (
-        <Home onStart={handleStart} onlineCount={onlineCount} />
+        <Home onlineCount={onlineCount} onStart={handleStart} />
       )}
     </div>
   );
