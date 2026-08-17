@@ -1,25 +1,18 @@
-# OpenChat 🎥
+# Randall (OpenChat) 🎥
 
-A fast, secure, and modern random video chat application where you can meet new people from around the world!
-
-## Demo
-
-[Add a GIF or screenshot here]
+A fast, secure, and modern random video chat application where you can meet new people from around the world! Featuring a vibrant design, multiple chat modes, and robust security.
 
 ## Features
 
-- **Video Chat:** Instantly connect face-to-face with a random stranger.
-- **Text Chat:** Send text messages alongside your video stream.
+- **📹 Video + Chat Mode:** Instantly connect face-to-face with a random stranger, complete with text messaging.
+- **💬 Text Only Mode:** Prefer not to be on camera? Connect instantly via text.
+- **👁 Spy Mode:** Ask a question and watch two strangers discuss it live.
 - **Interests Matching:** Enter topics you love to pair up with like-minded people.
-- **Typing Indicator:** See when the other person is typing a message.
-- **Online Counter:** See how many users are currently looking for a chat.
+- **Typing Indicator & Online Counter:** Real-time feedback on user activity.
 - **Common Interests Badge:** Highlights the shared interests you have with your partner.
-- **Report Button:** Keep the community safe by reporting inappropriate behavior.
-- **Spy Mode:** Ask a question and watch two strangers discuss it.
-- **Mobile Responsive:** Works beautifully on phones, tablets, and desktop computers.
-- **Mute/Camera Toggle:** Turn off your microphone or camera at any time.
-- **Chat-Only Mode:** Turn off video completely and just use text.
-- **Country Display:** See what country your chat partner is connecting from.
+- **Report & Skip:** Keep the community safe by reporting bad behavior or seamlessly skipping to the next person.
+- **Modern UI:** A stunning, fully responsive aesthetic built with Tailwind CSS and Framer Motion.
+- **Secure Backend:** Protected against malicious payloads and bots using Zod validation and Arcjet.
 
 ## Tech Stack
 
@@ -30,7 +23,7 @@ A fast, secure, and modern random video chat application where you can meet new 
 | **Real-time** | WebSockets (ws) | Maintains a persistent connection to send messages back and forth instantly. |
 | **P2P Video** | WebRTC | Connects your browser directly to another user's browser to stream live video. |
 | **Styling** | Tailwind CSS | Makes the app look beautiful with pre-built design utility classes. |
-| **Security** | Arcjet | Protects the app from bad actors, bots, and abuse. |
+| **Security & Validation** | Arcjet & Zod | Protects the app from bad actors, bots, and ensures data integrity. |
 
 ## How It Works
 
@@ -62,10 +55,10 @@ git clone https://github.com/yourusername/openchat.git
 cd openchat
 ```
 
-You need to install the dependencies (the pre-packaged code the app relies on) for both the backend server and the frontend UI:
+You need to install the dependencies for both the backend server and the frontend UI:
 
 ```bash
-# Install backend dependencies
+# Install backend dependencies in the root folder
 npm install
 
 # Move into the frontend folder and install its dependencies
@@ -107,7 +100,7 @@ npm run dev
 ### Verify It Works
 
 Open your web browser and go to `http://localhost:5173` (or whatever URL the Vite frontend terminal gives you). 
-You should see the OpenChat interface! When you click to start chatting, your browser will ask for permission to use your camera and microphone.
+You should see the Randall interface! When you click to start chatting in Video mode, your browser will ask for permission to use your camera and microphone.
 
 ## Project Structure
 
@@ -119,11 +112,11 @@ openchat/
 │   ├── index.js            # The main entry point that starts the server
 │   ├── arcjet.js           # Security rules and configurations
 │   ├── routes/             # API endpoints (e.g., /api/users)
-│   └── ws/                 # WebSocket logic (handles matching and chat rooms)
+│   └── ws/                 # WebSocket logic (handles matching, Spy mode, chat rooms)
 ├── ui/                     # Frontend React application
 │   ├── src/                # All the frontend code
-│   │   ├── components/     # Reusable UI pieces (buttons, chat boxes)
-│   │   ├── hooks/          # Custom React logic (like WebRTC management)
+│   │   ├── components/     # Reusable UI pieces (Home, VideoChat)
+│   │   ├── hooks/          # Custom React logic (useVideoChat, useDraggable)
 │   │   ├── App.jsx         # The main layout of the website
 │   │   └── index.css       # Global styles and Tailwind configuration
 │   ├── index.html          # The blank webpage that loads the React app
@@ -135,7 +128,7 @@ openchat/
 
 ## Contributing
 
-See CONTRIBUTING.md
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
 
