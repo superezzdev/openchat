@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import Home from "./components/Home";
-import VideoChat from "./components/VideoChat";
+const VideoChat = lazy(() => import("./components/VideoChat"));
 
 function App() {
   const [isChatting, setIsChatting] = useState(false);
@@ -41,7 +41,9 @@ function App() {
   return (
     <div className="w-full min-h-screen bg-xblack font-sans">
       {isChatting ? (
-        <VideoChat interests={interests} mode={mode} question={question} onQuit={() => setIsChatting(false)} />
+        <Suspense fallback={<div className="w-full min-h-screen flex items-center justify-center text-white bg-xblack">Loading...</div>}>
+          <VideoChat interests={interests} mode={mode} question={question} onQuit={() => setIsChatting(false)} />
+        </Suspense>
       ) : (
         <Home onlineCount={onlineCount} onStart={handleStart} />
       )}

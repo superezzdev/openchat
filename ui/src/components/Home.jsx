@@ -5,6 +5,7 @@ import { ArrowRight } from './ui/ArrowRight';
 import { CircularBadge } from './ui/CircularBadge';
 import { FloatingCard } from './ui/FloatingCard';
 import { Footer } from './ui/Footer';
+import randallLogoText from '../assets/randall.png';
 
 export default function Home({ onStart, onlineCount = 0 }) {
   const [mode, setMode] = useState('video');
@@ -54,11 +55,7 @@ export default function Home({ onStart, onlineCount = 0 }) {
       <nav className="relative z-20 flex items-center justify-between px-4 sm:px-6 md:px-8 py-4 md:py-5 max-w-[1440px] mx-auto w-full border-b border-white/10">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="relative w-[24px] h-[16px] md:w-[26px] md:h-[18px] shrink-0">
-            <div className="absolute left-0 top-0 w-[16px] h-[16px] md:w-[18px] md:h-[18px] rounded-full bg-white"/>
-            <div className="absolute left-2 top-0 w-[16px] h-[16px] md:w-[18px] md:h-[18px] rounded-full bg-white opacity-40"/>
-          </div>
-          <span className="text-sm md:text-base font-black text-white tracking-[-0.4px]">randall</span>
+          <img src={randallLogoText} alt="randall" className="h-[20px] md:h-[24px]" fetchpriority="high" />
         </div>
 
         {/* Nav links */}
