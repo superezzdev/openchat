@@ -1,4 +1,4 @@
-# Contributing to OpenChat
+# Contributing to OpenChat (Randall)
 
 ## Welcome
 Thank you so much for your interest in contributing to this project! We are thrilled to have you here. Whether you're an experienced developer or this is your very first time contributing to open source, all skill levels are welcome. Our community is built on helping each other learn and grow, so please don't hesitate to jump in!
@@ -46,8 +46,7 @@ Setting up the project locally is straightforward.
 ### Running the Backend Only
 If you're working on server-side logic:
 ```bash
-# Terminal 1
-cd backend
+# Terminal 1 (From the root of the project)
 npm install
 npm run dev
 ```
@@ -56,7 +55,7 @@ npm run dev
 If you're tweaking the UI:
 ```bash
 # Terminal 2
-cd frontend
+cd ui
 npm install
 npm run dev
 ```
@@ -64,7 +63,7 @@ npm run dev
 ### Testing WebRTC Locally
 To test an actual video call on your machine:
 1. Start both the backend and frontend.
-2. Open your browser and go to `http://localhost:3000` (or whichever port the frontend uses).
+2. Open your browser and go to `http://localhost:5173` (or whichever port the frontend uses).
 3. Open a **new Incognito/Private window** and go to the same URL.
 4. You can now test the connection between the two tabs!
 
