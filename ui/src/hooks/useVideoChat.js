@@ -40,7 +40,7 @@ export const useVideoChat = (interests = [], mode = 'video', question = '') => {
    */
   const fetchTurnServers = async () => {
     try {
-      const response = await fetch('https://myapp.metered.live/api/v1/turn/credentials?apiKey=YOUR_KEY');
+      const response = await fetch('/api/turn-credentials');
       if (!response.ok) throw new Error('Failed to fetch TURN credentials');
       const data = await response.json();
       iceServersRef.current = [{ urls: 'stun:stun.l.google.com:19302' }, ...data];
