@@ -223,7 +223,9 @@ export default function Home({ onStart, onlineCount = 0 }) {
             onMouseLeave={()=>setPressed(false)}
             className={`w-full h-[60px] bg-[#d8ff00] hover:bg-[#ccee00] border-2 border-transparent hover:border-[#003cff] rounded-2xl flex items-center justify-between pl-6 pr-2.5 cursor-pointer font-[inherit] transition-all duration-150 shadow-[0_8px_24px_rgba(216,255,0,0.3)] ${pressed ? 'scale-[0.98]' : 'scale-100'}`}>
             <span className="text-lg font-black text-[#003cff] uppercase tracking-wide">Start chatting</span>
-            <div className="w-[46px] h-[46px] rounded-full bg-[#003cff] flex items-center justify-center text-xl text-white shadow-inner">→</div>
+            <div className="w-[46px] h-[46px] rounded-full bg-[#003cff] flex items-center justify-center text-white shadow-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </div>
           </button>
 
           {/* Rules */}
