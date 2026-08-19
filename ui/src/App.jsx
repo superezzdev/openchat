@@ -1,5 +1,11 @@
 import { useState, useEffect, Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
 import Home from "./components/Home";
+import About from "./pages/About";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Safety from "./pages/Safety";
+import Contact from "./pages/Contact";
 const VideoChat = lazy(() => import("./components/VideoChat"));
 
 function App() {
@@ -45,7 +51,14 @@ function App() {
           <VideoChat interests={interests} mode={mode} question={question} onQuit={() => setIsChatting(false)} />
         </Suspense>
       ) : (
-        <Home onlineCount={onlineCount} onStart={handleStart} />
+        <Routes>
+          <Route path="/" element={<Home onlineCount={onlineCount} onStart={handleStart} />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/safety" element={<Safety />} />
+          <Route path="/contact" element={<Contact />} />
+        </Routes>
       )}
     </div>
   );
