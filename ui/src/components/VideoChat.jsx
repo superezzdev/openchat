@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useVideoChat } from '../hooks/useVideoChat.js';
 import { Mic, MicOff, Video, VideoOff, SkipForward, LogOut, Flag, MessageCircle, X, Send, Search } from 'lucide-react';
 import { useDraggable } from '../hooks/useDraggable.js';
+import { useVisualViewport } from '../hooks/useVisualViewport.js';
 
 const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) => {
   const {
@@ -30,7 +31,12 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
       }
     }
     prevMessagesLength.current = messages.length;
-  }, [messages, isChatOpen]);
+    // Auto-scroll to latest message
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isChatOpen, messagesEndRef]);
+
 
   const messageTimestamps = useRef(new WeakMap());
   const getTimestamp = (msg) => {
@@ -42,22 +48,8 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
 
   const { containerRef: localContainerRef, onMouseDown } = useDraggable();
 
-  useEffect(() => {
-    if (!window.visualViewport) return;
-    const onResizeViewport = () => {
-      const vh = window.innerHeight;
-      const vv = window.visualViewport.height;
-      const kbHeight = Math.max(0, vh - vv);
-      document.documentElement.style.setProperty('--keyboard-height', `${kbHeight}px`);
-    };
-    window.visualViewport.addEventListener('resize', onResizeViewport);
-    window.visualViewport.addEventListener('scroll', onResizeViewport);
-    onResizeViewport();
-    return () => {
-      window.visualViewport.removeEventListener('resize', onResizeViewport);
-      window.visualViewport.removeEventListener('scroll', onResizeViewport);
-    };
-  }, []);
+  useVisualViewport();
+
 
   const isConnected = status === 'connected';
   const isWaiting = status === 'idle' || status === 'searching' || status === 'waiting';
@@ -77,32 +69,32 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
   }, [isWaiting]);
 
   return (
-    <div className={`fixed inset-0 ${isTextMode ? 'bg-white' : 'bg-[#003cff]'} flex flex-col font-['Inter',system-ui,sans-serif] overflow-hidden`}>
+    <main className={`fixed inset-0 ${isTextMode ? 'bg-white' : 'bg-black'} flex flex-col font-['Inter',system-ui,sans-serif] overflow-hidden`}>
       
       {isTextMode && (
-        <div className="h-[60px] shrink-0 border-b border-slate-100 flex items-center justify-between px-5 bg-white z-40">
+        <header className="h-[60px] shrink-0 border-b border-slate-100 flex items-center justify-between px-5 bg-white z-40">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-[#d8ff00] flex items-center justify-center text-[#003cff] font-extrabold text-sm">S</div>
             <div className="text-slate-900 font-bold">Stranger</div>
             {isConnected && <div className="w-2 h-2 rounded-full bg-[#4ade80] shadow-[0_0_8px_rgba(74,222,128,0.5)]"></div>}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowReportModal(true)} className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-50 transition-colors">
+            <button aria-label="Report User" onClick={() => setShowReportModal(true)} className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-50 transition-colors">
               <Flag size={18} />
             </button>
-            <button onClick={onQuit} className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-50 transition-colors">
+            <button aria-label="Quit Chat" onClick={onQuit} className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-50 transition-colors">
               <LogOut size={18} />
             </button>
-            <button onClick={findStranger} className="px-3 py-1.5 bg-[#d8ff00] text-[#003cff] font-bold rounded-full text-sm flex items-center gap-1.5 hover:bg-[#ccee00] transition-colors">
+            <button aria-label="Skip to next stranger" onClick={findStranger} className="px-3 py-1.5 bg-[#d8ff00] text-[#003cff] font-bold rounded-full text-sm flex items-center gap-1.5 hover:bg-[#ccee00] transition-colors">
               <SkipForward size={16} /> Skip
             </button>
           </div>
-        </div>
+        </header>
       )}
 
       {/* Top panel */}
       {!isTextMode && (
-        <div className="relative flex-1">
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <video
             id="remote-video"
             ref={remoteVideoRef}
@@ -115,7 +107,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
             ref={localContainerRef}
             onMouseDown={onMouseDown}
             onTouchStart={onMouseDown}
-            className="absolute top-3 right-3 w-24 h-32 rounded-2xl border-[3px] border-[#d8ff00] z-10 cursor-grab overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+            className="absolute top-[72px] right-3 w-24 h-32 rounded-2xl border-[3px] border-[#d8ff00] z-10 cursor-grab overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.2)] pointer-events-auto"
           >
             <video
               ref={localVideoRef}
@@ -126,32 +118,34 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
             />
           </div>
 
-          <div className="absolute top-0 left-0 right-0 z-20 px-5 py-4 bg-gradient-to-b from-black/60 to-transparent flex items-center gap-2.5">
+          <header className="absolute top-0 left-0 right-0 z-20 px-5 py-4 bg-gradient-to-b from-black/70 via-black/30 to-transparent flex items-center gap-2.5 pointer-events-auto">
             <div className="w-9 h-9 rounded-full bg-[#d8ff00] flex items-center justify-center text-[#003cff] font-extrabold text-base">S</div>
             <div className="text-white text-base font-bold font-['Inter',system-ui,sans-serif] drop-shadow-md">Stranger</div>
             {isConnected && <div className="w-2 h-2 rounded-full bg-[#4ade80] ml-1 shadow-[0_0_8px_#4ade80]"></div>}
-            <button onClick={() => setShowReportModal(true)} className="ml-auto w-9 h-9 rounded-full bg-white/15 border-none text-white text-base cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-sm hover:bg-red-500 hover:scale-105">
+            <button aria-label="Report User" onClick={() => setShowReportModal(true)} className="ml-auto w-9 h-9 rounded-full bg-white/15 border-none text-white text-base cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-sm hover:bg-red-500 hover:scale-105">
               <Flag size={18} />
             </button>
-          </div>
+          </header>
 
-          <div className="absolute bottom-0 left-0 right-0 z-20 p-4 pb-[max(24px,env(safe-area-inset-bottom))] bg-gradient-to-t from-black/70 to-transparent flex justify-center gap-5 items-center">
-            <button onClick={toggleAudio} className="w-14 h-14 rounded-full bg-white/20 border border-white/30 text-white text-[22px] cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-md hover:bg-white hover:text-[#003cff] hover:scale-105">
+          <div className="absolute bottom-0 left-0 right-0 h-[500px] z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+
+          <div className="absolute bottom-[280px] left-0 right-0 z-20 p-4 flex justify-center gap-5 items-center pointer-events-auto">
+            <button aria-label="Toggle Microphone" onClick={toggleAudio} className="w-14 h-14 rounded-full bg-white/20 border border-white/30 text-white text-[22px] cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-md hover:bg-white hover:text-[#003cff] hover:scale-105">
               {!isAudioEnabled ? <MicOff size={24} /> : <Mic size={24} />}
             </button>
-            <button onClick={toggleVideo} className="w-14 h-14 rounded-full bg-white/20 border border-white/30 text-white text-[22px] cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-md hover:bg-white hover:text-[#003cff] hover:scale-105">
+            <button aria-label="Toggle Camera" onClick={toggleVideo} className="w-14 h-14 rounded-full bg-white/20 border border-white/30 text-white text-[22px] cursor-pointer flex items-center justify-center transition-all duration-200 backdrop-blur-md hover:bg-white hover:text-[#003cff] hover:scale-105">
               {!isVideoEnabled ? <VideoOff size={24} /> : <Video size={24} />}
             </button>
-            <button onClick={onQuit} className="w-14 h-14 rounded-full bg-red-500 border-none text-white text-[22px] cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(239,68,68,0.4)] transition-transform duration-200 hover:scale-105">
+            <button aria-label="Quit Chat" onClick={onQuit} className="w-14 h-14 rounded-full bg-red-500 border-none text-white text-[22px] cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(239,68,68,0.4)] transition-transform duration-200 hover:scale-105">
               <LogOut size={24} />
             </button>
-            <button onClick={findStranger} className="w-16 h-16 rounded-full bg-[#d8ff00] border-none text-[#003cff] text-[26px] font-bold cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(216,255,0,0.4)] transition-transform duration-200 hover:scale-105">
+            <button aria-label="Skip to next stranger" onClick={findStranger} className="w-16 h-16 rounded-full bg-[#d8ff00] border-none text-[#003cff] text-[26px] font-bold cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(216,255,0,0.4)] transition-transform duration-200 hover:scale-105">
               <SkipForward size={28} />
             </button>
           </div>
 
           {isDisconnected && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-40 flex flex-col items-center justify-center gap-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-40 flex flex-col items-center justify-center gap-4 pointer-events-auto">
               <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 px-8 py-9 flex flex-col items-center gap-5 shadow-[0_24px_48px_rgba(0,0,0,0.2)]">
                 <div className="text-white text-xl font-extrabold">Stranger disconnected</div>
                 <button onClick={findStranger} className="h-[52px] rounded-full bg-[#d8ff00] border-none text-[#003cff] px-9 cursor-pointer text-base font-extrabold shadow-[0_8px_20px_rgba(216,255,0,0.3)] transition-transform duration-200 hover:scale-105">Find new stranger</button>
@@ -183,19 +177,12 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
         </div>
       )}
 
+      {/* Spacer to push chat panel down when video is absolute */}
+      {!isTextMode && <div className="flex-1 pointer-events-none" />}
+
       {/* BOTTOM CHAT PANEL */}
-      <div className={`${isTextMode ? 'flex-1' : 'h-[280px] shrink-0 -mt-5 rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.2)]'} flex flex-col bg-white z-30 relative`}>
-        {!isTextMode && (
-          <div className="h-[60px] px-5 flex items-center gap-3 border-b border-slate-100">
-            <div className="w-8 h-8 rounded-full bg-[#d8ff00] flex items-center justify-center text-[#003cff] text-sm font-extrabold">S</div>
-            <div className="text-slate-900 text-base font-bold">Stranger</div>
-            <div className="ml-auto text-[#003cff] text-sm font-semibold">
-              {isStrangerTyping ? 'typing…' : (isConnected ? 'connected' : '')}
-            </div>
-          </div>
-        )}
-        
-        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3">
+      <footer className={`${isTextMode ? 'flex-1 bg-white' : 'h-[280px] shrink-0 bg-transparent'} flex flex-col z-30 relative pointer-events-none`}>
+        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3 pointer-events-auto">
           {messages.map((msg, idx) => {
             if (msg.sender === 'system') {
               return (
@@ -219,12 +206,12 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
             );
           })}
           <div ref={messagesEndRef} />
-          {isTextMode && isStrangerTyping && (
-             <div className="text-xs text-slate-400 font-semibold italic self-start px-2">Stranger is typing…</div>
+          {isStrangerTyping && (
+             <div className={`text-xs font-semibold italic self-start px-2 ${isTextMode ? 'text-slate-400' : 'text-white/80 drop-shadow-md'}`}>Stranger is typing…</div>
           )}
         </div>
         
-        <div className="bg-white border-t border-slate-100 pb-[env(safe-area-inset-bottom)] flex items-center px-4 py-3">
+        <div className={`${isTextMode ? 'bg-white border-t border-slate-100' : 'bg-transparent'} pb-[max(12px,env(safe-area-inset-bottom))] flex items-center px-4 py-3 pointer-events-auto`}>
           <form onSubmit={(e) => { e.preventDefault(); if (chatInput.trim()) sendMessage(); }} className="flex gap-2.5 w-full items-center">
             <input
               type="text"
@@ -232,14 +219,15 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
               onChange={handleChatInputChange}
               placeholder="Type a message…"
               disabled={!isConnected}
-              className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 text-slate-900 text-[15px] font-medium outline-none transition-colors duration-200 focus:border-[#003cff] focus:bg-white disabled:opacity-50"
+              aria-label="Message Input"
+              className={`flex-1 ${isTextMode ? 'bg-slate-50 border-slate-200 text-slate-900' : 'bg-black/30 border-white/20 text-white placeholder-white/60 backdrop-blur-md'} border-2 rounded-full px-4 py-3 text-[15px] font-medium outline-none transition-colors duration-200 focus:border-[#d8ff00] focus:bg-black/50 disabled:opacity-50`}
             />
-            <button type="submit" disabled={!isConnected || !chatInput.trim()} className={`w-12 h-12 rounded-full border-none text-[20px] flex shrink-0 items-center justify-center transition-all duration-200 ${!isConnected || !chatInput.trim() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#003cff] text-white cursor-pointer shadow-[0_4px_16px_rgba(0,60,255,0.4)]'}`}>
+            <button type="submit" aria-label="Send Message" disabled={!isConnected || !chatInput.trim()} className={`w-12 h-12 rounded-full border-none text-[20px] flex shrink-0 items-center justify-center transition-all duration-200 ${!isConnected || !chatInput.trim() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#003cff] text-white cursor-pointer shadow-[0_4px_16px_rgba(0,60,255,0.4)]'}`}>
               <Send size={20} />
             </button>
           </form>
         </div>
-      </div>
+      </footer>
 
       {isWaiting && (
         <div className="absolute inset-0 bg-[#003cff] flex flex-col items-center justify-center z-[60]">
@@ -271,7 +259,7 @@ const VideoChat = ({ onQuit, interests = [], mode = 'video', question = '' }) =>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

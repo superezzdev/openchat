@@ -1,5 +1,5 @@
 {
-  "name": "openchat",
+  "name": "randall",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,6 +7,8 @@
     "start": "node src/index.js",
     "dev:backend": "node --watch src/index.js",
     "dev": "npm run dev --workspaces --if-present & npm run dev:backend",
+    "build": "npm run build --workspaces --if-present",
+    "preview": "npm run preview --workspaces --if-present",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
