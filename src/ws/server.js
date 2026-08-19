@@ -197,10 +197,11 @@ export function attachWebSocketServer(server) {
 
         // Primary Match: Find someone with matching tags AND matching mode
         if (tags.length > 0) {
+          const lowerTags = tags.map(t => t.toLowerCase());
           for (const w of waitingQueue) {
             if (w.socket.readyState !== WebSocket.OPEN) continue;
             if (w.mode === mode) {
-              const common = w.tags.filter(t => tags.includes(t));
+              const common = w.tags.filter(t => lowerTags.includes(t.toLowerCase()));
               if (common.length > 0) {
                 match = w;
                 commonInterests = common;
@@ -356,23 +357,25 @@ export function attachWebSocketServer(server) {
     const now = Date.now();
     const waitList = Array.from(waitingQueue);
     
-    let lastUnmatched = null;
     for (const waiter of waitList) {
       if (waiter.socket.readyState !== WebSocket.OPEN) {
         waitingQueue.delete(waiter);
         continue;
       }
       
-      // Fallback (5 seconds): Ignore mode & tags, just pair who's been waiting longest
-      if (now - waiter.joinedAt > 5000) {
-        if (lastUnmatched) {
-          waitingQueue.delete(waiter);
-          waitingQueue.delete(lastUnmatched);
-          const commonInterests = waiter.tags.filter(t => lastUnmatched.tags.includes(t));
-          pairUp(waiter.socket, lastUnmatched.socket, commonInterests);
-          lastUnmatched = null;
-        } else {
-          lastUnmatched = waiter;
+      // Fallback (5 seconds): If someone waited > 5s, pair them with ANYONE available
+      if (now - waiter.joinedAt > 5000 && waitingQueue.has(waiter)) {
+        for (const potentialMatch of waitingQueue) {
+          if (potentialMatch !== waiter && potentialMatch.socket.readyState === WebSocket.OPEN) {
+            waitingQueue.delete(waiter);
+            waitingQueue.delete(potentialMatch);
+            
+            const lowerTags = waiter.tags.map(t => t.toLowerCase());
+            const commonInterests = potentialMatch.tags.filter(t => lowerTags.includes(t.toLowerCase()));
+            
+            pairUp(waiter.socket, potentialMatch.socket, commonInterests);
+            break;
+          }
         }
       }
     }
