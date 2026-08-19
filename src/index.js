@@ -26,7 +26,7 @@ app.use(express.json());
 app.use(securityMiddleware());
 
 // API Routes
-app.use("/", apiRoutes);
+app.use("/api", apiRoutes);
 
 const wss = attachWebSocketServer(server);
 
