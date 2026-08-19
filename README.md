@@ -1,4 +1,4 @@
-# Randall (OpenChat) 🎥
+# Randall 🎥
 
 ![Randall Preview](.github/assets/rendallpreview.png)
 
@@ -53,8 +53,8 @@ Before you begin, make sure you have:
 First, download the code and navigate into the project folder:
 
 ```bash
-git clone https://github.com/yourusername/openchat.git
-cd openchat
+git clone https://github.com/yourusername/randall.git
+cd randall
 ```
 
 You need to install the dependencies for both the backend server and the frontend UI:
@@ -88,7 +88,7 @@ To start the app, you will need to run two terminal windows (or tabs) at the sam
 
 **Terminal 1: Start the Backend Server**
 ```bash
-# Make sure you are in the root 'openchat' folder
+# Make sure you are in the root 'randall' folder
 npm run dev
 ```
 
@@ -109,7 +109,7 @@ You should see the Randall interface! When you click to start chatting in Video 
 Here is a quick map of where everything lives to help you find your way around:
 
 ```text
-openchat/
+randall/
 ├── src/                    # Backend server code
 │   ├── index.js            # The main entry point that starts the server
 │   ├── arcjet.js           # Security rules and configurations

@@ -12,7 +12,7 @@ export default function Contact() {
       </p>
       <h2>Open Source Contributions</h2>
       <p>
-        If you want to report a technical issue or contribute to the code, please visit our <a href="https://github.com/superezzdev/openchat" target="_blank" rel="noreferrer">GitHub repository</a> and open an issue or pull request.
+        If you want to report a technical issue or contribute to the code, please visit our <a href="https://github.com/superezzdev/randall" target="_blank" rel="noreferrer">GitHub repository</a> and open an issue or pull request.
       </p>
       <h2>Social Media</h2>
       <p>

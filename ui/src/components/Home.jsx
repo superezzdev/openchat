@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { m, LazyMotion, domAnimation } from 'motion/react';
 import { ArrowLeft } from './ui/ArrowLeft';
 import { ArrowRight } from './ui/ArrowRight';
 import { CircularBadge } from './ui/CircularBadge';
@@ -62,7 +62,7 @@ export default function Home({ onStart, onlineCount = 0 }) {
         <div className="hidden md:flex gap-4">
           {[
             {label:'How it works',href:'#'},
-            {label:'Open source',href:'https://github.com/superezzdev/openchat'},
+            {label:'Open source',href:'https://github.com/superezzdev/randall'},
           ].map(l=>(
             <a key={l.label} href={l.href} target="_blank" rel="noreferrer" 
               className="px-[18px] py-[8px] rounded-full border border-white/30 text-white text-[13px] font-bold no-underline transition-colors hover:bg-white/10 hover:border-white whitespace-nowrap">
@@ -86,11 +86,12 @@ export default function Home({ onStart, onlineCount = 0 }) {
 
       {/* ── HERO ── */}
       <main className="flex-1 relative z-10 px-4 pt-10 pb-[100px] md:pb-[160px] flex flex-col items-center justify-center max-w-[1440px] mx-auto w-full min-h-[clamp(300px,60vw,600px)]">
-        <div className="relative w-full max-w-[1000px] flex flex-col items-center">
+        <LazyMotion features={domAnimation}>
+          <div className="relative w-full max-w-[1000px] flex flex-col items-center">
           
           {/* ── STACKED GIANT TYPE ── */}
           <div className="w-full flex flex-col gap-0 md:gap-2 relative z-50 md:z-10 mt-8 md:mt-0">
-            <motion.div 
+            <m.div 
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
@@ -98,9 +99,9 @@ export default function Home({ onStart, onlineCount = 0 }) {
               <h1 className={`font-['Inter',system-ui,sans-serif] text-[clamp(3.5rem,11vw,160px)] font-black leading-[0.9] tracking-[-0.04em] text-[#d8ff00] uppercase m-0 p-0 ${typeShadowClass}`}>
                 MEET
               </h1>
-            </motion.div>
+            </m.div>
 
-            <motion.div 
+            <m.div 
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
@@ -108,9 +109,9 @@ export default function Home({ onStart, onlineCount = 0 }) {
               <h1 className={`font-['Inter',system-ui,sans-serif] text-[clamp(3.8rem,13vw,180px)] font-black leading-[0.9] tracking-[-0.04em] text-white uppercase m-0 p-0 overflow-visible whitespace-nowrap ${typeShadowClass}`}>
                 SOMEONE
               </h1>
-            </motion.div>
+            </m.div>
 
-            <motion.div 
+            <m.div 
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
@@ -118,7 +119,7 @@ export default function Home({ onStart, onlineCount = 0 }) {
               <h1 className={`font-['Inter',system-ui,sans-serif] text-[clamp(3.5rem,11vw,160px)] font-black leading-[0.9] tracking-[-0.04em] text-[#d8ff00] italic uppercase m-0 p-0 ${typeShadowClass}`}>
                 NEW
               </h1>
-            </motion.div>
+            </m.div>
             
             <p className="text-[12px] sm:text-[14px] text-white/50 tracking-[0.08em] uppercase text-center md:text-left md:pl-[15%] mt-6 md:mt-4 font-bold drop-shadow-md">
               One click · A real person · No accounts
@@ -129,7 +130,7 @@ export default function Home({ onStart, onlineCount = 0 }) {
           <div className="absolute inset-0 w-full h-full pointer-events-none">
             
             {/* Card 1 */}
-            <motion.div
+            <m.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1, y: [0, -15, 0] }}
               transition={{ scale: { duration: 0.5, delay: 0.3 }, y: { duration: 5, repeat: Infinity, ease: 'easeInOut' } }}
@@ -137,10 +138,10 @@ export default function Home({ onStart, onlineCount = 0 }) {
               <FloatingCard
                 name="Alex, 24" country="Brazil" flag="🇧🇷"
                 seed="Felix" rotateClass="rotate-[-8deg]"/>
-            </motion.div>
+            </m.div>
 
             {/* Card 2 */}
-            <motion.div
+            <m.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1, y: [0, -20, 0] }}
               transition={{ scale: { duration: 0.5, delay: 0.4 }, y: { duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 } }}
@@ -148,28 +149,29 @@ export default function Home({ onStart, onlineCount = 0 }) {
               <FloatingCard
                 name="Maya, 21" country="Japan" flag="🇯🇵"
                 seed="Maya" rotateClass="rotate-12"/>
-            </motion.div>
+            </m.div>
 
             {/* Arrow decorations */}
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
               className="absolute bottom-[2%] left-[2%] w-12 h-12 md:w-28 md:h-28 md:bottom-[10%] md:left-[-5%] z-20">
               <ArrowLeft/>
-            </motion.div>
-            <motion.div 
+            </m.div>
+            <m.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
               className="absolute top-[10%] right-[0%] w-10 h-10 md:w-20 md:h-20 md:top-[10%] md:right-[5%] z-20">
               <ArrowRight/>
-            </motion.div>
+            </m.div>
 
             {/* Spinning badge */}
-            <motion.div 
+            <m.div 
               initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.5, delay: 0.8 }}
               className="absolute bottom-[-15%] right-[5%] md:bottom-[-5%] md:right-[15%] z-40 pointer-events-auto transform scale-75 md:scale-100">
               <CircularBadge onClick={handleStart}/>
-            </motion.div>
+            </m.div>
           </div>
         </div>
+        </LazyMotion>
       </main>
 
       {/* ── BOTTOM WHITE SECTION ── */}

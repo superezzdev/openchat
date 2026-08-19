@@ -1,4 +1,4 @@
-# Contributing to OpenChat (Randall)
+# Contributing to Randall
 
 ## Welcome
 Thank you so much for your interest in contributing to this project! We are thrilled to have you here. Whether you're an experienced developer or this is your very first time contributing to open source, all skill levels are welcome. Our community is built on helping each other learn and grow, so please don't hesitate to jump in!
@@ -19,8 +19,8 @@ Getting started is easier than you might think! Here's a step-by-step guide:
 2. **Fork the repository:** Click the "Fork" button at the top right of this page to create your own copy of the project.
 3. **Clone your fork:** Download your copy to your local machine.
    ```bash
-   git clone https://github.com/YOUR_USERNAME/openchat.git
-   cd openchat
+   git clone https://github.com/YOUR_USERNAME/randall.git
+   cd randall
    ```
 4. **Create a branch:** Make a new branch for your changes. Use a descriptive name!
    ```bash
