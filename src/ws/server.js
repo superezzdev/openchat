@@ -2,6 +2,8 @@ import { WebSocket, WebSocketServer } from "ws";
 import { wsArcjet } from "../arcjet.js";
 import crypto from "crypto";
 import { z } from "zod";
+import { db } from "../db/index.js";
+import { reports } from "../db/schema.js";
 
 /**
  * Attaches the WebSocket server to the HTTP server and handles signaling.
@@ -58,11 +60,13 @@ export function attachWebSocketServer(server) {
    * @param {Object} stranger1 - The first stranger object
    * @param {Object} stranger2 - The second stranger object
    */
-  function pairUpSpy(spyItem, stranger1, stranger2) {
+  function pairUpSpy(spyItem, stranger1, stranger2, commonInterests = []) {
     const room = { 
       sockets: [spyItem.socket, stranger1.socket, stranger2.socket], 
       type: 'spy', 
       spySocket: spyItem.socket, 
+      stranger1Socket: stranger1.socket,
+      stranger2Socket: stranger2.socket,
       question: spyItem.question 
     };
     rooms.set(spyItem.socket, room);
@@ -71,9 +75,27 @@ export function attachWebSocketServer(server) {
 
     console.log(`[${new Date().toISOString()}] Paired (Spy): ${spyItem.socket.id} (Spy) & ${stranger1.socket.id} & ${stranger2.socket.id}`);
 
-    sendJson(spyItem.socket, { type: "matched", initiator: false, isSpy: true, question: spyItem.question });
-    sendJson(stranger1.socket, { type: "matched", initiator: true, isSpyStranger: true, question: spyItem.question, peerId: 1 });
-    sendJson(stranger2.socket, { type: "matched", initiator: false, isSpyStranger: true, question: spyItem.question, peerId: 2 });
+    sendJson(spyItem.socket, { type: "matched", initiator: false, isSpy: true, question: spyItem.question, commonInterests });
+    sendJson(stranger1.socket, { type: "matched", initiator: true, isSpyStranger: true, question: spyItem.question, peerId: 1, commonInterests });
+    sendJson(stranger2.socket, { type: "matched", initiator: false, isSpyStranger: true, question: spyItem.question, peerId: 2, commonInterests });
+  }
+
+  /**
+   * Attempts to assign a spy if text mode, otherwise pairs normally.
+   */
+  function tryPairWithSpy(socket1, socket2, mode, commonInterests) {
+    if (mode === 'text' && spyQueue.size > 0) {
+      for (const spy of spyQueue) {
+        if (spy.socket.readyState === WebSocket.OPEN) {
+          spyQueue.delete(spy);
+          pairUpSpy(spy, { socket: socket1 }, { socket: socket2 }, commonInterests);
+          return;
+        } else {
+          spyQueue.delete(spy);
+        }
+      }
+    }
+    pairUp(socket1, socket2, commonInterests);
   }
 
   /**
@@ -126,10 +148,20 @@ export function attachWebSocketServer(server) {
 
     const room = rooms.get(socket);
     if (room) {
-      for (const s of room.sockets) {
-        rooms.delete(s);
-        if (s !== socket && s.readyState === WebSocket.OPEN) {
-          sendJson(s, { type: "peer_left" });
+      if (room.type === 'spy' && socket === room.spySocket) {
+        rooms.delete(socket);
+        room.sockets = room.sockets.filter(s => s !== socket);
+        for (const s of room.sockets) {
+          if (s.readyState === WebSocket.OPEN) {
+            sendJson(s, { type: "spy_left", message: "The spy has disconnected. You can continue chatting." });
+          }
+        }
+      } else {
+        for (const s of room.sockets) {
+          rooms.delete(s);
+          if (s !== socket && s.readyState === WebSocket.OPEN) {
+            sendJson(s, { type: "peer_left" });
+          }
         }
       }
     }
@@ -138,6 +170,21 @@ export function attachWebSocketServer(server) {
   wss.on("connection", async (socket, req) => {
     socket.id = crypto.randomUUID();
     console.log(`[${new Date().toISOString()}] WebSocket connected: ${socket.id}`);
+
+    socket.isAlive = true;
+    socket.on("pong", () => {
+      socket.isAlive = true;
+    });
+
+    socket.on("error", (error) => {
+      console.log(`[${new Date().toISOString()}] WebSocket error on ${socket.id}: ${error.message}`);
+      socket.terminate();
+    });
+    
+    socket.on("close", () => {
+      handleDisconnect(socket);
+      setTimeout(broadcastUserCount, 50); // Small delay to let wss.clients update
+    });
 
     let isAuthenticated = !wsArcjet;
     const messageQueue = [];
@@ -224,25 +271,7 @@ export function attachWebSocketServer(server) {
 
         if (match) {
           waitingQueue.delete(match);
-          
-          // If they are connecting via text, try to pull in a spy
-          let spyAssigned = false;
-          if (mode === 'text' && spyQueue.size > 0) {
-            for (const spy of spyQueue) {
-              if (spy.socket.readyState === WebSocket.OPEN) {
-                spyQueue.delete(spy);
-                pairUpSpy(spy, { socket }, match);
-                spyAssigned = true;
-                break;
-              } else {
-                spyQueue.delete(spy);
-              }
-            }
-          }
-
-          if (!spyAssigned) {
-            pairUp(socket, match.socket, commonInterests);
-          }
+          tryPairWithSpy(socket, match.socket, mode, commonInterests);
         } else {
           waitingQueue.add({ socket, tags, mode, joinedAt: Date.now() });
           sendJson(socket, { type: "waiting" });
@@ -262,6 +291,14 @@ export function attachWebSocketServer(server) {
         console.log(`Room Type: ${room ? room.type : 'N/A'}`);
         console.log(`Reason: ${message.reason}`);
         console.log("-----------------------------------------");
+        
+        if (message.reason) {
+          db.insert(reports).values({
+            reporterId: socket.id,
+            roomType: room ? room.type : 'unknown',
+            reason: message.reason
+          }).catch(err => console.error(`[${new Date().toISOString()}] Error saving report to DB via WS:`, err));
+        }
         return;
       }
 
@@ -271,6 +308,11 @@ export function attachWebSocketServer(server) {
       if (["offer", "answer", "ice-candidate", "chat", "typing", "mediaState"].includes(message.type)) {
         const room = rooms.get(socket);
         if (room) {
+          // Prevent the spy from sending WebRTC signaling to strangers
+          if (room.type === 'spy' && socket === room.spySocket && ["offer", "answer", "ice-candidate", "mediaState"].includes(message.type)) {
+            return;
+          }
+
           for (const s of room.sockets) {
             if (s !== socket && s.readyState === WebSocket.OPEN) {
               if (room.type === 'spy' && ["offer", "answer", "ice-candidate", "mediaState"].includes(message.type) && s === room.spySocket) {
@@ -282,7 +324,7 @@ export function attachWebSocketServer(server) {
                 let senderId;
                 if (socket === room.spySocket) {
                   senderId = 'Spy';
-                } else if (socket === room.sockets[1]) {
+                } else if (socket === room.stranger1Socket) {
                   senderId = 'Stranger 1';
                 } else {
                   senderId = 'Stranger 2';
@@ -298,6 +340,10 @@ export function attachWebSocketServer(server) {
 
     socket.on("message", (data) => {
       if (!isAuthenticated) {
+        if (messageQueue.length > 50) {
+          socket.close(1009, "Message queue limit exceeded during authentication");
+          return;
+        }
         messageQueue.push(data);
         return;
       }
@@ -307,34 +353,31 @@ export function attachWebSocketServer(server) {
     if (wsArcjet) {
       try {
         const ipSrc = req.headers["x-forwarded-for"]?.split(',')[0] || req.socket?.remoteAddress;
-        const decision = await wsArcjet.protect(req, { ipSrc });
+        
+        // Wrap Arcjet protect in a 2000ms timeout to prevent hanging
+        let timeoutId;
+        const decision = await Promise.race([
+          wsArcjet.protect(req, { ipSrc }),
+          new Promise((_, reject) => {
+            timeoutId = setTimeout(() => reject(new Error('Arcjet timeout')), 2000);
+          })
+        ]);
+        clearTimeout(timeoutId);
+
         if (decision.isDenied()) {
           socket.close(1008, "Access denied");
           return;
         }
         isAuthenticated = true;
         messageQueue.forEach(msg => processMessage(msg));
+        messageQueue.length = 0; // Clear the queue to free memory
       } catch (e) {
         socket.close(1011, "Server security error");
         return;
       }
     }
 
-    socket.isAlive = true;
     broadcastUserCount();
-
-    socket.on("pong", () => {
-      socket.isAlive = true;
-    });
-
-    socket.on("error", (error) => {
-      console.log(`[${new Date().toISOString()}] WebSocket error on ${socket.id}: ${error.message}`);
-      socket.terminate();
-    });
-    socket.on("close", () => {
-      handleDisconnect(socket);
-      setTimeout(broadcastUserCount, 50); // Small delay to let wss.clients update
-    });
   });
 
   const interval = setInterval(() => {
@@ -366,17 +409,30 @@ export function attachWebSocketServer(server) {
       // Fallback (5 seconds): If someone waited > 5s, pair them with ANYONE available
       if (now - waiter.joinedAt > 5000 && waitingQueue.has(waiter)) {
         for (const potentialMatch of waitingQueue) {
-          if (potentialMatch !== waiter && potentialMatch.socket.readyState === WebSocket.OPEN) {
+          if (potentialMatch !== waiter && potentialMatch.socket.readyState === WebSocket.OPEN && potentialMatch.mode === waiter.mode) {
             waitingQueue.delete(waiter);
             waitingQueue.delete(potentialMatch);
             
             const lowerTags = waiter.tags.map(t => t.toLowerCase());
             const commonInterests = potentialMatch.tags.filter(t => lowerTags.includes(t.toLowerCase()));
             
-            pairUp(waiter.socket, potentialMatch.socket, commonInterests);
+            tryPairWithSpy(waiter.socket, potentialMatch.socket, waiter.mode, commonInterests);
             break;
           }
         }
+      }
+    }
+
+    // Spy Queue Fallback (30 seconds): Notify spies if no text users are found
+    for (const spy of Array.from(spyQueue)) {
+      if (spy.socket.readyState !== WebSocket.OPEN) {
+        spyQueue.delete(spy);
+        continue;
+      }
+      
+      if (now - spy.joinedAt > 30000) {
+        spyQueue.delete(spy);
+        sendJson(spy.socket, { type: "spy_timeout", message: "No active text chats available to spy on at the moment." });
       }
     }
   }, 1000);
